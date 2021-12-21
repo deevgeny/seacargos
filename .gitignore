@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+# Access files with uri user/pwd/host for MongoDB
+access.py
+one-line/access.py
+dev/access.py
+
 # Distribution / packaging
 .Python
 build/
@@ -15,13 +20,16 @@ downloads/
 eggs/
 .eggs/
 lib/
+src/lib/
 lib64/
+src/lib64/
 parts/
 sdist/
 var/
 wheels/
 pip-wheel-metadata/
 share/python-wheels/
+src/share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
