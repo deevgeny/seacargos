@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask
+#from werkzeug.utils import import_string
 
 
 def create_app(test_config=None):
@@ -13,6 +14,8 @@ def create_app(test_config=None):
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
+        #cfg = import_string('config.ProductionConfig')()
+        #app.config.from_object(cfg)
         app.config.from_pyfile('config.py', silent=True)
     else:
         # load the test config if passed in
