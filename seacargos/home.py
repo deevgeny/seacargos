@@ -15,4 +15,5 @@ def index():
     content["users"] = db.users.count_documents({})
     content["shipments"] = db.shipments.count_documents({})
     content["tracking"] = db.tracking.count_documents({})
+    content["logs"] = db.logs.count_documents({})
     return render_template('home/index.html', content=content)
