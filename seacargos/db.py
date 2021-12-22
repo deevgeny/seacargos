@@ -1,4 +1,3 @@
-import sqlite3
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
@@ -9,7 +8,7 @@ from flask.cli import with_appcontext
 
 def get_conn():
     if 'conn' not in g:
-        g.conn = MongoClient(current_app.config['DB_URI'])
+        g.conn = MongoClient(current_app.config['DB_FRONTEND_URI'])
     return g.conn
 
 def close_conn(exception):
