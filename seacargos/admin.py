@@ -4,10 +4,10 @@ from flask import (
 from werkzeug.exceptions import abort
 from seacargos.db import get_conn
 
-bp = Blueprint('home', __name__)
+bp = Blueprint('admin', __name__)
 
-@bp.route('/')
-def index():
+@bp.route('/admin')
+def admin():
     conn = get_conn()
     db = conn.seacargos
     content = {}
@@ -16,4 +16,4 @@ def index():
     content["shipments"] = db.shipments.count_documents({})
     content["tracking"] = db.tracking.count_documents({})
     content["logs"] = db.logs.count_documents({})
-    return render_template('home/home.html', content=content)
+    return render_template('admin/admin.html', content=content)

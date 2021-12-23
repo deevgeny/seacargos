@@ -1,10 +1,7 @@
 <!doctype html>
 <title>SeaCargos | {% block title %}{% endblock %}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<nav>
-  <h1>SeaCargos Web App</h1>
-
-</nav>
+  
 <section class="content">
   <header>
     {% block header %}{% endblock %}
@@ -12,5 +9,8 @@
   {% for message in get_flashed_messages() %}
     <div class="flash">{{ message }}</div>
   {% endfor %}
-  {% block content %}{% endblock %}
+  {% block content %}
+  <h1>SeaCargos Web App</h1>
+  <a href="{{ url_for('admin') }}">Admin panel</a>
+  {% endblock %}
 </section>

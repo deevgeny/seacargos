@@ -34,6 +34,11 @@ def create_app(test_config=None):
     # Register home page blueprint
     from . import home
     app.register_blueprint(home.bp)
-    app.add_url_rule('/', endpoint='index')
+    app.add_url_rule("/", endpoint="home")
+
+    # Register admin blueprint
+    from . import admin
+    app.register_blueprint(admin.bp)
+    app.add_url_rule("/admin", endpoint="admin")
 
     return app
