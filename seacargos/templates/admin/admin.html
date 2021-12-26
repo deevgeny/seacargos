@@ -5,30 +5,17 @@
 
 
 {% block header %}
-  <!--{% if g.user %}
-    <a class="action" href="{{ url_for('blog.create') }}">New</a>
-  {% endif %}-->
 {% endblock %}
 
 {% block content %}
 <h2>Admin panel.</h2>
 <a href="{{ url_for('home') }}">Home page.</a>
+<a href="{{ url_for('home.logout') }}">Log out.</a>
+
 <h3>Records in seacargos database {{ content }}</h3>
-  <!--{% for post in posts %}
-    <article class="post">
-      <header>
-        <div>
-          <h1>{{ post['title'] }}</h1>
-          <div class="about">by {{ post['username'] }} on {{ post['created'].strftime('%Y-%m-%d') }}</div>
-        </div>
-        {% if g.user['id'] == post['author_id'] %}
-          <a class="action" href="{{ url_for('blog.update', id=post['id']) }}">Edit</a>
-        {% endif %}
-      </header>
-      <p class="body">{{ post['body'] }}</p>
-    </article>
-    {% if not loop.last %}
-      <hr>
-    {% endif %}
-  {% endfor %}-->
+<h4>User id: {{ content.user._id }}</h4>
+<h4>User name: {{ content.user.name }}</h4>
+<h4>User role: {{ content.user.role }}</h4>
+<h4>User password: {{ content.user.password }}</h4>
+
 {% endblock %}

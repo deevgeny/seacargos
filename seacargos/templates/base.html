@@ -2,15 +2,15 @@
 <title>SeaCargos | {% block title %}{% endblock %}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   
-<section class="content">
   <header>
     {% block header %}{% endblock %}
   </header>
   {% for message in get_flashed_messages() %}
     <div class="flash">{{ message }}</div>
   {% endfor %}
+
+  <!--CONTENT BLOCK-->
   {% block content %}
   <h1>SeaCargos Web App</h1>
   <a href="{{ url_for('admin') }}">Admin panel</a>
   {% endblock %}
-</section>

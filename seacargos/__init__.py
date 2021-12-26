@@ -26,14 +26,15 @@ def create_app(test_config=None):
         app.config.from_mapping(test_config)
 
     # Register functions
-    # Register db functions
+    # Register db functions and configure db
     from . import db
     db.init_app(app)
+    db.setup_db(app)
 
     # Blueprints
     # Register home page blueprint
-    from . import home
-    app.register_blueprint(home.bp)
+    from . import index
+    app.register_blueprint(index.bp)
     app.add_url_rule("/", endpoint="home")
 
     # Register admin blueprint
