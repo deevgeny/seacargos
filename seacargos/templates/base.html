@@ -1,16 +1,23 @@
-<!doctype html>
-<title>SeaCargos | {% block title %}{% endblock %}</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  
-  <header>
-    {% block header %}{% endblock %}
-  </header>
-  {% for message in get_flashed_messages() %}
-    <div class="flash">{{ message }}</div>
-  {% endfor %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>SeaCargos | {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head> 
+  <body>
+    <div class="header">
+        <h2>Sea Cargos</h2>
+    </div>
+    <div class="fixed-container">
+    {% block errors %}
+      {% for message in get_flashed_messages() %}
+        <div class="flash">{{ message }}</div>
+      {% endfor %}
+    {% endblock %}
 
-  <!--CONTENT BLOCK-->
-  {% block content %}
-  <h1>SeaCargos Web App</h1>
-  <a href="{{ url_for('admin') }}">Admin panel</a>
-  {% endblock %}
+    {% block content %}
+    {% endblock %}
+    </div>
+  </body>
+  </html>
