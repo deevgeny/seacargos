@@ -1,13 +1,24 @@
 <!DOCTYPE html>
+
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>SeaCargos | {% block title %}{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sea Cargos Aggregator{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   </head> 
+
   <body>
-    <div class="header">
-        <h2>Sea Cargos</h2>
+    <div id="grid">
+      <div id="header" class="header-bar">
+        {% block header %}Sea Cargos Aggregator{% endblock %}
+      </div>
+      <!--<div id="side-menu">Side menu</div>-->
+      <div id="top-menu">{% block top_menu %}{% endblock %}</div>
+      <div id="content" class="content-container">{% block content %}{% endblock %}</div>
+      <div id="footer" class="footer-bar">
+        {% block footer %}Sea Cargos Aggregator Wep App{% endblock %}
+      </div>
     </div>
     <div class="fixed-container">
     {% block errors %}
@@ -16,8 +27,6 @@
       {% endfor %}
     {% endblock %}
 
-    {% block content %}
-    {% endblock %}
     </div>
   </body>
-  </html>
+</html>

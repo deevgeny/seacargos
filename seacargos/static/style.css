@@ -1,3 +1,5 @@
+/* Original sourse https://www.w3.org/TR/css-grid/ */
+/* BASIC GRID LAYOUT */
 body {
 	margin: 0;
 	padding: 0;
@@ -5,15 +7,70 @@ body {
 	font-family: Arial;
 }
 
-.header {
-    text-align: center;
-    border: 1px solid black;
+@media (orientation: landscape) {
+    #grid {
+        display: grid;
+        grid-template-areas: "header header"
+                             "top-menu top-menu"
+                             "content content" /* . means empty */
+                             "footer footer";
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto 1fr auto;
+    }
 }
 
-.fixed-container {
-	max-width: 1000px;
-	padding: 0 20px;
-	margin: 0 auto;
-	position: relative;
+#header {grid-area: header; justify-self: stretch;}
+#top-menu {grid-area: top-menu; align-self: left;}
+#side-menu {grid-area: side-menu; align-self: start;}
+#content {grid-area: content; justify-self: center;}
+#footer {grid-area: footer; justify-self: stretch;}
+
+.header-bar {
+    font-size: 20px;
+    padding: 20px 0px;
+    text-align: center;
+    border-bottom: 1px solid black;
 }
+
+.top-menu-bar {
+    background-color: black;
+    color: white;
+}
+
+.content-container {
+    padding: 10px;
+    min-height: 500px;
+}
+
+.footer-bar {
+    font-size: 12px;
+    padding: 5px 0px;
+    text-align: center;
+    border-top: 1px solid black;
+}
+/* CONTENT STYLES */
+form.login-form {
+    display: grid;
+    grid-template-columns: [labels] auto [fields] auto;
+    grid-auto-flow: row dense;
+    width: 200px;
+    margin-top: 50px;
+}
+
+    form.login-form > label {
+        grid-column: labels;
+        grid-row: auto;
+        place-self: center left;
+        /*align-self: center;
+        justify-self: left;*/
+    }
+    form.login-form > input {
+        grid-column: fields;
+        grid-row: auto;
+        place-self: center right;
+        /*align-self: center;
+        justify-self: left;*/
+        margin: 5px 0;
+        max-width: 100px;
+    }
 
