@@ -1,0 +1,3 @@
+graft seacargos/static
+graft seacargos/templates
+global-exclude *.pyc
