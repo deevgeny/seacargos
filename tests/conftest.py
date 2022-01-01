@@ -12,10 +12,7 @@ from seacargos.db import db_conn
 @pytest.fixture
 def app():
     #db_fd, db_path = tempfile.mkstemp()
-    app = create_app({
-        'TESTING': True,
-        'DB_FRONTEND_URI': "",
-    })
+    app = create_app({"TESTING": True})
 
     #with app.app_context():
         #init_db()

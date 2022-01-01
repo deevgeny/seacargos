@@ -27,6 +27,7 @@ def create_app(test_config=None):
     else:
         # load the test config if passed in
         app.config.from_mapping(test_config)
+        app.config.from_file('test_config.json', load=json.load)
 
     # Register functions
     # Register db functions and configure db
