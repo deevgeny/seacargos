@@ -28,24 +28,23 @@ def load_logged_in_user():
     if user_id is None:
         g.user = None
     else:
-        #conn = db_conn()
-        #g.user = conn.seacargos.users.find_one({'_id': user_id})
-        g.user = db_conn().seacargos.users.find_one({'_id': ObjectId(user_id)})
+        db = db_conn()[g.db]
+        g.user = db.users.find_one({'_id': ObjectId(user_id)})
 
 @bp.route('/', methods=('GET', 'POST'))
 def home():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        conn = db_conn()
+        db = db_conn()[g.db]
         error = None
-        user = conn.seacargos.users.find_one({"name": username})
+        user = db.users.find_one({"name": username})
 
         if user is None:
             error = 'Incorrect username.'
         elif not check_password_hash(user['password'], password):
             error = 'Incorrect password.'
-        
+
         if error is None:
             session.clear()
             session['user_id'] = user['_id'].__str__()
@@ -53,24 +52,10 @@ def home():
                 return redirect(url_for('admin'))
             elif user['role'] == 'user':
                 return redirect(url_for('home.dashboard'))
-        
+
         flash(error)
-    conn = db_conn()
-    db = conn.seacargos
-    content = {}
-    content["vessels"] = db.vessels.count_documents({})
-    content["users"] = db.users.count_documents({})
-    content["shipments"] = db.shipments.count_documents({})
-    content["tracking"] = db.tracking.count_documents({})
-    content["logs"] = db.logs.count_documents({})
-    ps_ = generate_password_hash("xyz")
-    content['passtype'] = type(ps_)
-    content['password'] = ps_
-    content['g'] = g.user
-    content['sessonUser'] = session.keys()
+    content = {}  
     return render_template('home/home.html', content=content)
-    
-    #return render_template('home/home.html')
 
 @bp.route('/dashboard')
 @user_login_required
@@ -85,4 +70,3 @@ def logout():
     """Logout function."""
     session.clear()
     return redirect(url_for('home'))
-

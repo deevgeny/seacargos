@@ -10,7 +10,7 @@ def create_app(test_config=None):
     app.config.from_mapping(
         {"DB_FRONTEND_URI": "mongodb://usr:pass@localhost:27017/"}
     )
-    
+
     # Ensure the instance folder exists
     try:
         os.makedirs(app.instance_path)
@@ -37,8 +37,8 @@ def create_app(test_config=None):
 
     # Blueprints
     # Register home page blueprint
-    from . import index
-    app.register_blueprint(index.bp)
+    from . import home
+    app.register_blueprint(home.bp)
     app.add_url_rule("/", endpoint="home")
 
     # Register admin blueprint
