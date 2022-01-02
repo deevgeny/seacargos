@@ -2,6 +2,8 @@ import pytest
 from seacargos.db import db_conn, close_db_conn, setup_db
 from pymongo import MongoClient
 from flask import g
+import json
+from bson.json_util import dumps
 from werkzeug.security import check_password_hash, generate_password_hash
 
 def test_db_conn(app):
@@ -55,5 +57,21 @@ def test_setup_db(app):
         setup_db(app)
         assert conn.test.users.count_documents({}) == 2
         # Clear db after the tests and check
-        conn.test.users.delete_many({})
-        assert conn.test.users.count_documents({}) == 0
+        #conn.test.users.delete_many({})
+        #assert conn.test.users.count_documents({}) == 0
+
+def test_db_users_collection_name_index(app):
+    """Test db users collection indexes - name should be unique."""
+    with app.app_context():
+        # Drop all indexes and check
+        conn = db_conn()
+        conn.test.users.drop_index("name_index")
+        assert len(json.loads(dumps(conn.test.users.list_indexes()))) == 1
+        # Run setup_db() function and check that indexes have been added
+        setup_db(app)
+        cur = conn.test.users.list_indexes()
+        indexes = json.loads(dumps(cur))
+        assert indexes == [
+            {'v': 2, 'key': {'_id': 1}, 'name': '_id_'}, 
+            {'v': 2, 'key': {'name': 1}, 'name': 'name_index', 'unique': True}
+            ]

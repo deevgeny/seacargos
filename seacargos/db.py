@@ -1,4 +1,4 @@
-from pymongo import MongoClient
+from pymongo import MongoClient, ASCENDING
 from pymongo.errors import ConnectionFailure
 from bson.json_util import dumps
 import json
@@ -30,9 +30,11 @@ def init_app(app):
 
 def setup_db(app):
     """Add 2 first users to database."""
+    # Connect to database
     conn = MongoClient(app.config['DB_FRONTEND_URI'])
     db = conn[app.config["DB_NAME"]]
-    # Add test admin to db
+
+    # Add admin user to database
     cur = db.users.find_one({"name": app.config["ADMIN_NAME"]})
     if cur is None:
         pwd = generate_password_hash(app.config['ADMIN_PASSWORD'])
@@ -41,7 +43,8 @@ def setup_db(app):
             'password': pwd,
             'role': 'admin'}
         )
-    # Add test user to db
+
+    # Add simple user to database
     cur = db.users.find_one({"name": app.config["USER_NAME"]})
     if cur is None:
         pwd = generate_password_hash(app.config['USER_PASSWORD'])
@@ -50,4 +53,15 @@ def setup_db(app):
             'password': pwd,
             'role': 'user'}
         )
+    
+    # Add username unique index to database users collection
+    cur = db.users.list_indexes()
+    idxs = json.loads(dumps(cur))
+    if len(idxs) == 1:
+        db.users.create_index(
+            [("name", ASCENDING)],
+            unique=True,
+            name="name_index"
+            )
+
     conn.close()
