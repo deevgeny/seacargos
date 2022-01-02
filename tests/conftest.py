@@ -1,6 +1,5 @@
 import os
 import tempfile
-import mongomock
 
 import pytest
 from seacargos import create_app
