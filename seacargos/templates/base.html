@@ -13,20 +13,12 @@
       <div id="header" class="header-bar">
         {% block header %}Sea Cargos Aggregator{% endblock %}
       </div>
-      <!--<div id="side-menu">Side menu</div>-->
       <div id="top-menu">{% block top_menu %}{% endblock %}</div>
+      <div id="error-message">{% block errors %}{% endblock %}</div>
       <div id="content" class="content-container">{% block content %}{% endblock %}</div>
       <div id="footer" class="footer-bar">
         {% block footer %}Sea Cargos Aggregator Wep App{% endblock %}
       </div>
-    </div>
-    <div class="fixed-container">
-    {% block errors %}
-      {% for message in get_flashed_messages() %}
-        <div class="flash">{{ message }}</div>
-      {% endfor %}
-    {% endblock %}
-
     </div>
   </body>
 </html>

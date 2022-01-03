@@ -41,7 +41,7 @@ def home():
         user = db.users.find_one({"name": username})
 
         if user is None:
-            error = 'Incorrect username.'
+            error = "User with such name does not exist."
         elif not check_password_hash(user['password'], password):
             error = 'Incorrect password.'
 
@@ -62,7 +62,7 @@ def dashboard():
     """Home dashboard view function."""
     content = None
     # temporary return, create dashboard template
-    return render_template('home/home.html', content=content)
+    return render_template('home/dashboard.html', content=content)
 
 @bp.route('/logout')
 def logout():
