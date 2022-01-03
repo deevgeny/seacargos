@@ -37,6 +37,7 @@ def dashboard():
     """Home dashboard view function."""
     if request.method == 'POST':
         number = request.form["number"]
+        number = identify_input(number)
         flash(number)
         flash(g.user["name"])
         #db = db_conn()[g.db]
@@ -61,3 +62,6 @@ def dashboard():
 
     return render_template('dashboard/dashboard.html', content=content)
 
+def identify_input(number):
+    """Helper function to identify bill or container number."""
+    return number + "xgxgxgxg"
