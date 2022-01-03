@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{# Add dashboard caption to title tag #}
+{% block title %}
+  {% if g.user %}
+    | Dashboard
+  {% endif %}
+{% endblock %}
+
+{# Add user name and logout link to top menu #}
+{% block top_menu %}
+  {% if g.user %}
+    User: {{ g.user['name'] }} | <a href="{{ url_for('home.logout')}}">Logout</a>
+  {% endif %}
+{% endblock %}
+
+{# Add errors if exists #}
+{% block errors %}
+  {% for message in get_flashed_messages() %} 
+    <div class="error-message-container">{{ message }}</div>
+  {% endfor %}
+{% endblock %}
+
+{# Page content block #}
+{% block content %}
+<div id="dashboard">
+  <div id="tracking-form" class="tracking-form-container">
+    <div class="caption">Track new shipment</div>
+    <form method="post" class="tracking-form">
+      <label for="number">Bill or container number:</label>
+      <input name="number" id="number" required>
+      <input type="submit" value="Add">
+    </form>
+  </div>
+  <div id="tracking-status" class="tracking-status-container">
+    <div class="caption">Tracking status</div>
+  </div>
+  <div id="empty-space" class="empty-space-container">
+    <div class="caption">Location status</div>
+  </div>
+</div>
+{% endblock %}

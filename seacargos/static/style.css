@@ -7,7 +7,7 @@ body {
 	font-family: Arial;
 }
 
-/* GRID LAYOUT */
+/* GRIDS LAYOUTS */
 @media (orientation: landscape) {
     #grid {
         display: grid;
@@ -19,14 +19,29 @@ body {
         grid-template-columns: auto auto;
         grid-template-rows: auto auto auto 1fr auto;
     }
-}
+    #dashboard {
+        display: grid;
+        grid-template-areas: "tracking-form tracking-status empty-space"
+                             "schedule-table schedule-table schedule-table";
+        grid-template-columns: auto 1fr auto;
+        grid-template-rows: auto 1fr;
+    }
 
+/* Grid elements */
 #header {grid-area: header; justify-self: stretch;}
-#top-menu {grid-area: top-menu; align-self: left;}
+#top-menu {grid-area: top-menu; align-self: left; margin: 0 10px 0;}
 #error-message {grid-area: error-message; align-self: start; justify-self: stretch;}
-#content {grid-area: content; justify-self: center;}
+#content {grid-area: content; justify-self: center; margin: 0 10px 0;}
 #footer {grid-area: footer; justify-self: stretch;}
 
+/* Dashboard elements */
+#tracking-form {grid-area: tracking-form; place-self: center left; margin-left: 10px;}
+#tracking-status {grid-area: tracking-status; place-self: center center; margin: 0 10px 0;}
+#empty-space {grid-area: empty-space; place-self: center center; margin-right: 10px;}
+#schedule-table {grid-area: schedule-table; place-self: center center; margin: 0 10px 0;}
+}
+
+/* Grid classes */
 .header-bar {
     font-size: 20px;
     padding: 20px 0px;
@@ -57,7 +72,33 @@ body {
     text-align: center;
     border-top: 1px solid black;
 }
-/* CONTENT STYLES */
+
+/* Dashboard classes */
+.tracking-form-container {
+    border: 1px solid black;
+    min-height: 200px;
+}
+
+.tracking-status-container {
+    border: 1px solid black;
+    min-height: 200px;
+    width: 300px;
+}
+
+.empty-space-container {
+    border: 1px solid black;
+    min-height: 200px;
+    width: 300px;
+}
+
+.caption {
+    font-size: 14px;
+    text-align: center;
+    padding: 5px;
+    font-weight: bold;
+}
+
+/* Forms */
 form.login-form {
     display: grid;
     grid-template-columns: [labels] auto [fields] auto;
@@ -66,7 +107,6 @@ form.login-form {
     margin-top: 50px;
     place-self: center stretch;
 }
-
     form.login-form > label {
         grid-column: labels;
         grid-row: auto;
@@ -82,5 +122,28 @@ form.login-form {
         justify-self: left;*/
         margin: 5px 0;
         max-width: 100px;
+    }
+
+form.tracking-form {
+    display: grid;
+    grid-template-columns: [labels] auto [fields] auto;
+    grid-auto-flow: row dense;
+    width: 300px;
+    /*margin-top: 50px;*/
+    place-self: center center;
+}
+    form.tracking-form > label {
+        grid-column: labels;
+        grid-row: auto;
+        place-self: center left;
+        font-size: 14px;
+        margin-left: 10px;
+    }
+    form.tracking-form > input {
+        grid-column: fields;
+        grid-row: auto;
+        place-self: center right;
+        max-width: 100px;
+        margin: 5px 10px 5px 0;
     }
 

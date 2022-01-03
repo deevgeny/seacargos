@@ -56,14 +56,6 @@ def home():
     content = {}  
     return render_template('home/home.html', content=content)
 
-@bp.route('/dashboard')
-@user_login_required
-def dashboard():
-    """Home dashboard view function."""
-    content = None
-    # temporary return, create dashboard template
-    return render_template('home/dashboard.html', content=content)
-
 @bp.route('/logout')
 def logout():
     """Logout function."""

@@ -1,11 +1,13 @@
 {% extends 'base.html' %}
 
+{# Display errors if exist #}
 {% block errors %}
   {% for message in get_flashed_messages() %} 
     <div class="error-message-container">{{ message }}</div>
   {% endfor %}
 {% endblock %}
 
+{# Page content block #}
 {% block content %}
   {% if not g.user %}
     <form method="post" class="login-form">
