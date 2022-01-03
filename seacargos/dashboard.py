@@ -64,4 +64,7 @@ def dashboard():
 
 def identify_input(number):
     """Helper function to identify bill or container number."""
-    return number + "xgxgxgxg"
+    if len(number) == 12:
+        return {"bookingNo": number}
+    elif len(number) == 11:
+        return {"cntrNo": number}
