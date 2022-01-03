@@ -7,23 +7,14 @@
   {% endif %}
 {% endblock %}
 
-{% block errors %}
-{% endblock %}
-
 {% block top_menu %}
   {% if g.user %}
     User: {{ g.user['name'] }} | <a href="{{ url_for('home.logout')}}">Logout</a>
   {% endif %}
 {% endblock %}
 
+{% block errors %}
+{% endblock %}
+
 {% block content %}
-  {% if not g.user %}
-    <form method="post" class="login-form">
-      <label for="username">Username:</label>
-      <input name="username" id="username" required>
-      <label for="password">Password:</label>
-      <input type="password" name="password" id="password" required>
-      <input type="submit" value="Log In">
-    </form>
-  {% endif %}
 {% endblock %}

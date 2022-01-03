@@ -1,17 +1,5 @@
 {% extends 'base.html' %}
 
-{% block title %}
-  {% if g.user %}
-    | Dashboard
-  {% endif %}
-{% endblock %}
-
-{% block top_menu %}
-  {% if g.user %}
-    User: {{ g.user['name'] }} | <a href="{{ url_for('home.logout')}}">Logout</a>
-  {% endif %}
-{% endblock %}
-
 {% block errors %}
   {% for message in get_flashed_messages() %} 
     <div class="error-message-container">{{ message }}</div>
