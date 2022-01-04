@@ -51,7 +51,7 @@ def home():
             if user['role'] == 'admin':
                 return redirect(url_for('admin'))
             elif user['role'] == 'user':
-                return redirect(url_for('home.dashboard'))
+                return redirect(url_for('dashboard'))
         flash(error)
     content = {}  
     return render_template('home/home.html', content=content)
