@@ -44,7 +44,7 @@ def dashboard():
     db = conn[g.db_name]
     content = {"table": "x"}
     
-    # POST request code
+    # POST request
     if request.method == 'POST':
         user_input = request.form["booking"]
         query = validate_user_input(user_input)
@@ -52,7 +52,7 @@ def dashboard():
         if check_db_records(query, conn, db):
             content.update(pipeline(query, conn, db))
     
-    # GET request code
+    # GET request
     content.update(tracking_status_content(conn, db))
     tracking_data = db_tracking_data(g.user["name"], conn, db)
     table_data = schedule_table_data(tracking_data)
