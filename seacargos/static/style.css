@@ -82,13 +82,13 @@ body {
 /* Dashboard classes */
 .tracking-form-container {
     border: 1px solid black;
-    min-height: 200px;
+    min-height: 130px;
     min-width: 300px;
 }
 
 .tracking-status-container {
     border: 1px solid black;
-    min-height: 200px;
+    min-height: 130px;
     min-width: 300px;
 }
     .tracking-status-container .record {
@@ -106,7 +106,7 @@ body {
 
 .location-status-container {
     border: 1px solid black;
-    min-height: 200px;
+    min-height: 130px;
     min-width: 300px;
 }
 

@@ -112,7 +112,9 @@ def transform_data(data):
             "trackStart": datetime.now().replace(microsecond=0),
             "trackEnd": None,
             "outboundTerminal": "",
+            "departureDate": "",
             "inboundTerminal": "",
+            "arrivalDate": "",
             "vesselName": None,
             "location": None,
             "schedule": None,
@@ -137,14 +139,18 @@ def transform_data(data):
             "imo": i["lloydNo"],
         } for i in data["schedule_data"]]
         result["schedule"] = schedule
-        # Find and save outbound and inbound terminals
+        # Find and save outbound/inbound terminals and departure/arrival dates
         for i in data["schedule_data"]:
-            if i["statusNm"].find("Outbound Terminal") > -1:
+            if i["statusNm"].find("Departure from Port of Loading") > -1:
                 result["outboundTerminal"] = i["placeNm"]\
                 + "|" + i["yardNm"]
-            if i["statusNm"].find("Inbound Terminal") > -1:
+            if i["statusNm"].find("Departure from Port of Loading") > -1: 
+                result["departureDate"] = datetime.strptime(i["eventDt"], "%Y-%m-%d %H:%M")
+            if i["statusNm"].find("Arrival at Port of Discharging") > -1:
                 result["inboundTerminal"] = i["placeNm"]\
                 + "|" + i["yardNm"]
+            if i["statusNm"].find("Arrival at Port of Discharging") > -1:
+                result["arrivalDate"] = datetime.strptime(i["eventDt"], "%Y-%m-%d %H:%M")
     else:
         log("[oneline.py] [transform_data()]"\
             + f" [Keys do not match in schedule data {data['query']}]")

@@ -147,7 +147,7 @@ def db_tracking_data(user, conn, db):
         conn.admin.command("ping")
         tracking_cursor = db.tracking.aggregate(
             [{"$match": {"user": user, "trackEnd": None}},
-             {"$sort": {"trackStart": 1}}]
+             {"$sort": {"departureDate": 1}}]
         )
         return json.loads(dumps(tracking_cursor))
     except ConnectionFailure:
@@ -162,19 +162,18 @@ def db_tracking_data(user, conn, db):
 
 def schedule_table_data(records):
     """Prepare tracking shipments content."""
-    def to_time(microsec):
+    def to_date(microsec):
         f_str = "%d-%m-%Y %H:%M"
         return strftime(f_str, gmtime(int(microsec) / 1000))
     table_data = {"table": []}
     for r in records:
-        departure = None
-        arrival = None
-        
-        for s in r["schedule"]:
-            if s["event"].find("Departure from Port of Loading") > -1:
-                departure = to_time(s["eventDate"]["$date"])
-            if s["event"].find("Arrival at Port of Discharging") > -1:
-                arrival = to_time(s["eventDate"]["$date"])
+        #departure = None
+        #arrival = None
+        #for s in r["schedule"]:
+            #if s["event"].find("Departure from Port of Loading") > -1:
+                #departure = to_time(s["eventDate"]["$date"])
+            #if s["event"].find("Arrival at Port of Discharging") > -1:
+                #arrival = to_time(s["eventDate"]["$date"])
     
         table_data["table"].append(
             {"booking": r["bkgNo"], "container": r["cntrNo"], "type": r["cntrType"],
@@ -182,12 +181,12 @@ def schedule_table_data(records):
                  "location": r["outboundTerminal"].split("|")[0],
                  "terminal": r["outboundTerminal"].split("|")[-1]
              },
-             "departure": departure,
+             "departure": to_date(r["departureDate"]["$date"]),
              "to": {
                  "location": r["inboundTerminal"].split("|")[0],
                  "terminal": r["inboundTerminal"].split("|")[-1]
              },
-             "arrival": arrival
+             "arrival": to_date(r["arrivalDate"]["$date"])
             }
         )
     return table_data    
