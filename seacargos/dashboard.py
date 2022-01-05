@@ -9,6 +9,9 @@ from seacargos.db import db_conn
 from bson.objectid import ObjectId
 from seacargos.etl.oneline import pipeline
 from pymongo.errors import ConnectionFailure
+import json
+from bson.json_util import dumps
+from time import strftime, gmtime
 
 bp = Blueprint('dashboard', __name__)
 
@@ -39,7 +42,7 @@ def dashboard():
     """Home dashboard view function."""
     conn = db_conn()
     db = conn[g.db_name]
-    content = {}
+    content = {"table": "x"}
     
     # POST request code
     if request.method == 'POST':
@@ -50,7 +53,10 @@ def dashboard():
             content.update(pipeline(query, conn, db))
     
     # GET request code
-    content.update(tracking_content(conn, db))
+    content.update(tracking_status_content(conn, db))
+    tracking_data = db_tracking_data(g.user["name"], conn, db)
+    table_data = schedule_table_data(tracking_data)
+    content.update(table_data)
 
     return render_template('dashboard/dashboard.html', content=content)
 
@@ -90,7 +96,11 @@ def check_db_records(query, conn, db):
         else:
             #log("[oneline.py] [check_db_records()]"\
             #    + f" [Record already exists for {query}]")
-            flash("This record already exists.")
+            #item = query.pop("bkgNo", None)
+            if "bkgNo" in query:
+                flash(f"Item {query['bkgNo']} already exists in tracking database.")
+            else:
+                flash(f"Item {query['cntrNo']} already exists in tracking database.")
             return False
     except ConnectionFailure:
         #log("[oneline.py] [check_db_records()]"\
@@ -104,7 +114,7 @@ def check_db_records(query, conn, db):
         return False
 
 # DB content query helper functions
-def tracking_content(conn, db):
+def tracking_status_content(conn, db):
     """Get tracking content from database."""
     try:
         conn.admin.command("ping")
@@ -125,3 +135,59 @@ def tracking_content(conn, db):
         #log("[oneline.py] [check_db_records()]"\
         #    + f" [{err.details} for {query}]")
         return {"tracking": "Unexpected error."}
+
+def db_tracking_data(user, conn, db):
+    """Get shipments that did not reach destination from
+    tracking collection."""
+    if not user:
+        #log("[oneline.py] [check_db_records()]"\
+          #  + f" [Wrong query {query}]")
+        return False
+    try:
+        conn.admin.command("ping")
+        tracking_cursor = db.tracking.aggregate(
+            [{"$match": {"user": user, "trackEnd": None}},
+             {"$sort": {"trackStart": 1}}]
+        )
+        return json.loads(dumps(tracking_cursor))
+    except ConnectionFailure:
+        #log("[oneline.py] [check_db_records()]"\
+        #    + f" [DB Connection failure for {query}]")
+        return False
+    except BaseException as err:
+        #log("[oneline.py] [check_db_records()]"\
+        #    + f" [{err.details} for {query}]")
+        #print(err)
+        return False
+
+def schedule_table_data(records):
+    """Prepare tracking shipments content."""
+    def to_time(microsec):
+        f_str = "%d-%m-%Y %H:%M"
+        return strftime(f_str, gmtime(int(microsec) / 1000))
+    table_data = {"table": []}
+    for r in records:
+        departure = None
+        arrival = None
+        
+        for s in r["schedule"]:
+            if s["event"].find("Departure from Port of Loading") > -1:
+                departure = to_time(s["eventDate"]["$date"])
+            if s["event"].find("Arrival at Port of Discharging") > -1:
+                arrival = to_time(s["eventDate"]["$date"])
+    
+        table_data["table"].append(
+            {"booking": r["bkgNo"], "container": r["cntrNo"], "type": r["cntrType"],
+             "from": {
+                 "location": r["outboundTerminal"].split("|")[0],
+                 "terminal": r["outboundTerminal"].split("|")[-1]
+             },
+             "departure": departure,
+             "to": {
+                 "location": r["inboundTerminal"].split("|")[0],
+                 "terminal": r["inboundTerminal"].split("|")[-1]
+             },
+             "arrival": arrival
+            }
+        )
+    return table_data    

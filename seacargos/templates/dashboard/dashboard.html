@@ -44,5 +44,32 @@
   <div id="location-status" class="location-status-container">
     <div class="caption">Location status</div>
   </div>
+  <div id="schedule-table">
+    {% if content.table %}
+    <div class="caption">Schedule data</div>
+    <table>
+      <tr>
+        <th>Booking</th>
+        <th>Container</th>
+        <th>Type</th>
+        <th>From</th>
+        <th>Departure</th>
+        <th>To</th>
+        <th>Arrival</th>
+      </tr>
+      {% for row in content.table %}
+        <tr>
+          <td>{{ row.booking }}</td>
+          <td>{{ row.container }}</td>
+          <td>{{ row.type }}</td>
+          <td>{{ row.from.location }}<br>{{ row.from.terminal }}</td>
+          <td>{{ row.departure }}</td>
+          <td>{{ row.to.location }}<br>{{ row.to.terminal }}</td>
+          <td>{{ row.arrival }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+  </div>
 </div>
 {% endblock content %}

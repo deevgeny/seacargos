@@ -37,7 +37,7 @@ body {
     /* Dashboard elements */
     #tracking-form {grid-area: tracking-form; place-self: center left; margin-left: 10px;}
     #tracking-status {grid-area: tracking-status; place-self: center center; margin: 0 10px 0;}
-    #location-status {grid-area: location-status; place-self: center center; margin-right: 10px;}
+    #location-status {grid-area: location-status; place-self: center right; margin-right: 10px;}
     #schedule-table {grid-area: schedule-table; place-self: center center; margin: 0 10px 0;}
 }
 
@@ -83,12 +83,13 @@ body {
 .tracking-form-container {
     border: 1px solid black;
     min-height: 200px;
+    min-width: 300px;
 }
 
 .tracking-status-container {
     border: 1px solid black;
     min-height: 200px;
-    width: 300px;
+    min-width: 300px;
 }
     .tracking-status-container .record {
         font-size: 14px;
@@ -106,7 +107,7 @@ body {
 .location-status-container {
     border: 1px solid black;
     min-height: 200px;
-    width: 300px;
+    min-width: 300px;
 }
 
 .caption {
@@ -117,6 +118,12 @@ body {
     font-weight: bold;
 }
 
+#schedule-table table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 5px;
+        font-size: 12px;
+}
 /* Forms */
 form.login-form {
     display: grid;
