@@ -9,10 +9,11 @@ from flask import current_app, g
 from flask.cli import with_appcontext
 
 def db_conn():
-    """Open MongoDB connection, add to g and return."""
+    """Open MongoDB connection, add connection to g as g.conn and
+    database name to g as g.db. Return g.conn."""
     if 'conn' not in g:
         g.conn = MongoClient(current_app.config['DB_FRONTEND_URI'])
-        g.db = current_app.config["DB_NAME"]
+        g.db_name = current_app.config["DB_NAME"]
     return g.conn
 
 def close_db_conn(exception):

@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{# Display errors if exist #}
-{% block errors %}
+{# Display messages if exist #}
+{% block messages %}
   {% for message in get_flashed_messages() %} 
-    <div class="error-message-container">{{ message }}</div>
+    <div class="error-message">{{ message }}</div>
   {% endfor %}
-{% endblock %}
+{% endblock messages %}
 
 {# Page content block #}
 {% block content %}
@@ -22,4 +22,4 @@
     <p>Please go to your <a href="{{ url_for('dashboard')}}">dashboard</a>
     or <a href="{{ url_for('home.logout')}}">logout</a>.</p>
   {% endif %}
-{% endblock %}
+{% endblock content %}

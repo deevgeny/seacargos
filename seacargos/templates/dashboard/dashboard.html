@@ -5,27 +5,27 @@
   {% if g.user %}
     | Dashboard
   {% endif %}
-{% endblock %}
+{% endblock title %}
 
 {# Display user name and logout link on top menu #}
 {% block top_menu %}
   {% if g.user %}
     User: {{ g.user['name'] }} | <a href="{{ url_for('home.logout')}}">Logout</a>
   {% endif %}
-{% endblock %}
+{% endblock top_menu %}
 
-{# Display errors if exists #}
-{% block errors %}
+{# Display messages if exists #}
+{% block messages %}
   {% for message in get_flashed_messages() %} 
-    <div class="error-message-container">{{ message }}</div>
+    <div class="error-message">{{ message }}</div>
   {% endfor %}
-{% endblock %}
+{% endblock messages %}
 
 {# Page content block #}
 {% block content %}
 <div id="dashboard">
   <div id="tracking-form" class="tracking-form-container">
-    <div class="caption">Track new shipment</div>
+    <div class="caption">Add new shipment</div>
     <form method="post" class="tracking-form">
       <label for="booking">Booking or container No.:</label>
       <input name="booking" id="booking" required>
@@ -34,9 +34,15 @@
   </div>
   <div id="tracking-status" class="tracking-status-container">
     <div class="caption">Tracking status</div>
+    <div class="record">Active shipments: {{ content.active }}</div>
+    <div class="record">Arrived shipments: {{ content.arrived }}</div>
+    <div class="record">Total shipments: {{ content.total }}</div>
+    {% if content.tracking %}
+      <div class="message">{{ content.tracking }}</div>
+    {% endif %}
   </div>
-  <div id="empty-space" class="empty-space-container">
+  <div id="location-status" class="location-status-container">
     <div class="caption">Location status</div>
   </div>
 </div>
-{% endblock %}
+{% endblock content %}

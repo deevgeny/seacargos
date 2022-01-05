@@ -13,7 +13,7 @@ body {
         display: grid;
         grid-template-areas: "header header"
                              "top-menu top-menu"
-                             "error-message error-message"
+                             "message message"
                              "content content" /* . means empty */
                              "footer footer";
         grid-template-columns: auto auto;
@@ -21,24 +21,24 @@ body {
     }
     #dashboard {
         display: grid;
-        grid-template-areas: "tracking-form tracking-status empty-space"
+        grid-template-areas: "tracking-form tracking-status location-status"
                              "schedule-table schedule-table schedule-table";
         grid-template-columns: auto 1fr auto;
         grid-template-rows: auto 1fr;
     }
 
-/* Grid elements */
-#header {grid-area: header; justify-self: stretch;}
-#top-menu {grid-area: top-menu; align-self: left; margin: 0 10px 0;}
-#error-message {grid-area: error-message; align-self: start; justify-self: stretch;}
-#content {grid-area: content; justify-self: center; margin: 0 10px 0;}
-#footer {grid-area: footer; justify-self: stretch;}
+    /* Grid elements */
+    #header {grid-area: header; justify-self: stretch;}
+    #top-menu {grid-area: top-menu; align-self: left;}
+    #message {grid-area: message; align-self: start; justify-self: stretch;}
+    #content {grid-area: content; justify-self: center;}
+    #footer {grid-area: footer; justify-self: stretch;}
 
-/* Dashboard elements */
-#tracking-form {grid-area: tracking-form; place-self: center left; margin-left: 10px;}
-#tracking-status {grid-area: tracking-status; place-self: center center; margin: 0 10px 0;}
-#empty-space {grid-area: empty-space; place-self: center center; margin-right: 10px;}
-#schedule-table {grid-area: schedule-table; place-self: center center; margin: 0 10px 0;}
+    /* Dashboard elements */
+    #tracking-form {grid-area: tracking-form; place-self: center left; margin-left: 10px;}
+    #tracking-status {grid-area: tracking-status; place-self: center center; margin: 0 10px 0;}
+    #location-status {grid-area: location-status; place-self: center center; margin-right: 10px;}
+    #schedule-table {grid-area: schedule-table; place-self: center center; margin: 0 10px 0;}
 }
 
 /* Grid classes */
@@ -50,17 +50,23 @@ body {
 }
 
 .top-menu-bar {
-    background-color: black;
-    color: white;
+    font-size: 14px;
+    padding: 0 10px 0;
 }
 
-.error-message-container {
+.error-message {
     color: red;
     padding: 2px 0;
     text-align: center;
     font-size: 14px;
 }
 
+.info-message {
+    color: green;
+    padding: 2px 0;
+    text-align: center;
+    font-size: 14px;
+}
 .content-container {
     padding: 10px;
     min-height: 500px;
@@ -84,14 +90,27 @@ body {
     min-height: 200px;
     width: 300px;
 }
+    .tracking-status-container .record {
+        font-size: 14px;
+        text-align: left;
+        margin: 5px 0 5px 10px;
 
-.empty-space-container {
+    }
+    .tracking-status-container .message {
+        font-size: 14px;
+        text-align: center;
+        margin: 5px 10px;
+        color: green;
+    }
+
+.location-status-container {
     border: 1px solid black;
     min-height: 200px;
     width: 300px;
 }
 
 .caption {
+    /* for tracking-form, tracking-status and location-status containers */
     font-size: 14px;
     text-align: center;
     padding: 5px;
@@ -137,7 +156,7 @@ form.tracking-form {
         grid-row: auto;
         place-self: center left;
         font-size: 14px;
-        margin-left: 10px;
+        margin: 5px 0 5px 10px;
     }
     form.tracking-form > input {
         grid-column: fields;
