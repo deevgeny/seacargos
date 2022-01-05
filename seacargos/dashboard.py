@@ -65,7 +65,7 @@ def validate_user_input(user_input):
             }
     elif len(user_input) == 11:
         return {
-            "cntrNo": user_input.upper(), "line": None,
+            "cntrNo": user_input.upper(), "line": "ONE",
             "name": g.user["name"], "trackEnd": None
             }
     else:
