@@ -98,6 +98,12 @@ def transform_data(data):
         log("[oneline.py] [transform_data()]"\
             + f" [No raw data]")
         return False
+    
+    def to_date_obj(string):
+        """Transform string date to datetime object."""
+        f_str = "%Y-%m-%d %H:%M"
+        return datetime.strptime(string, f_str)
+    
     # Check contnainer keys and extract container info
     cntr_keys = ["cntrNo", "cntrTpszNm", "copNo", "blNo"]
     if set(cntr_keys).issubset(set(data["container_data"])):
@@ -107,50 +113,41 @@ def transform_data(data):
             "copNo": data["container_data"]["copNo"],
             "bkgNo": data["container_data"]["bkgNo"],
             "blNo": data["container_data"]["blNo"],
-            "user": data["query"]["user"],
-            "line": data["query"]["line"],
+            "user": data["query"]["user"], "line": data["query"]["line"],
             "trackStart": datetime.now().replace(microsecond=0),
-            "trackEnd": None,
-            "outboundTerminal": "",
-            "departureDate": "",
-            "inboundTerminal": "",
-            "arrivalDate": "",
-            "vesselName": None,
-            "location": None,
-            "schedule": None,
+            "trackEnd": None, "outboundTerminal": "", "departureDate": "",
+            "inboundTerminal": "", "arrivalDate": "", "vesselName": None,
+            "location": None, "schedule": None,
         }
     else:
         log("[oneline.py] [transform_data()]"\
             + f" [Keys do not match in container data {data['query']}]")
         return False
     # Check schedule keys and extract schedule data
-    schedule_keys = ["no", "statusNm", "placeNm", "yardNm",
-                     "eventDt", "actTpCd", "actTpCd", "vslEngNm",
-                     "lloydNo"]
+    schedule_keys = ["no", "statusNm", "placeNm", "yardNm", "eventDt",
+                     "actTpCd", "actTpCd", "vslEngNm", "lloydNo"]
     if set(schedule_keys).issubset(set(data["schedule_data"][0])):
-        schedule = [{
-            "no": int(i["no"]),
-            "event": i["statusNm"],
-            "placeName": i["placeNm"],
-            "yardName": i["yardNm"],
-            "eventDate": datetime.strptime(i["eventDt"], "%Y-%m-%d %H:%M"),
-            "status": i["actTpCd"],
-            "vesselName": i["vslEngNm"],
-            "imo": i["lloydNo"],
-        } for i in data["schedule_data"]]
-        result["schedule"] = schedule
-        # Find and save outbound/inbound terminals and departure/arrival dates
+        schedule = []
         for i in data["schedule_data"]:
+            # Add schedule item
+            schedule.append({
+            "no": int(i["no"]), "event": i["statusNm"],
+            "placeName": i["placeNm"], "yardName": i["yardNm"],
+            "eventDate": to_date_obj(i["eventDt"]), "status": i["actTpCd"],
+            "vesselName": i["vslEngNm"], "imo": i["lloydNo"]
+            })
+            # Find & save outbound/inbound terminals & departure/arrival dates
             if i["statusNm"].find("Departure from Port of Loading") > -1:
                 result["outboundTerminal"] = i["placeNm"]\
                 + "|" + i["yardNm"]
             if i["statusNm"].find("Departure from Port of Loading") > -1: 
-                result["departureDate"] = datetime.strptime(i["eventDt"], "%Y-%m-%d %H:%M")
+                result["departureDate"] = to_date_obj(i["eventDt"])
             if i["statusNm"].find("Arrival at Port of Discharging") > -1:
                 result["inboundTerminal"] = i["placeNm"]\
                 + "|" + i["yardNm"]
             if i["statusNm"].find("Arrival at Port of Discharging") > -1:
-                result["arrivalDate"] = datetime.strptime(i["eventDt"], "%Y-%m-%d %H:%M")
+                result["arrivalDate"] = to_date_obj(i["eventDt"])
+        result["schedule"] = schedule
     else:
         log("[oneline.py] [transform_data()]"\
             + f" [Keys do not match in schedule data {data['query']}]")

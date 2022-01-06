@@ -42,7 +42,7 @@ def dashboard():
     """Home dashboard view function."""
     conn = db_conn()
     db = conn[g.db_name]
-    content = {"table": "x"}
+    content = {}
     
     # POST request
     if request.method == 'POST':
@@ -59,6 +59,22 @@ def dashboard():
     content.update(table_data)
 
     return render_template('dashboard/dashboard.html', content=content)
+
+def ping(func):
+    """Catch database CRUD ops exceptions """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except ConnectionFailure as e:
+            #log(f"[oneline.py] [{func.__name__}]"\
+            #    + f" [DB Connection failure for args {*args}]")
+            return False
+        except BaseException as e:
+            #log(f"[oneline.py] [{func.__name__}]"\
+            #    + f" [Base Exception {e} for args {*args}]")
+            return False
+    return wrapper
 
 # User input validation helper functions
 def validate_user_input(user_input):
@@ -79,6 +95,7 @@ def validate_user_input(user_input):
         # Add logger record
         return False
 
+@ping
 def check_db_records(query, conn, db):
     """Use query argument to count documents in database
     shipments and tracking collections. Return True if count is 0
@@ -87,55 +104,34 @@ def check_db_records(query, conn, db):
         #log("[oneline.py] [check_db_records()]"\
           #  + f" [Wrong query {query}]")
         return False
-    try:
-        conn.admin.command("ping")
-        shipments = db.shipments.count_documents(query)
-        tracking = db.tracking.count_documents(query)
-        if shipments == 0 and tracking == 0:
-            return True
+    shipments = db.shipments.count_documents(query)
+    tracking = db.tracking.count_documents(query)
+    if shipments == 0 and tracking == 0:
+        return True
+    else:
+        #log("[oneline.py] [check_db_records()]"\
+        #    + f" [Record already exists for {query}]")
+        if "bkgNo" in query:
+            flash(f"Item {query['bkgNo']} already exists in tracking database.")
         else:
-            #log("[oneline.py] [check_db_records()]"\
-            #    + f" [Record already exists for {query}]")
-            #item = query.pop("bkgNo", None)
-            if "bkgNo" in query:
-                flash(f"Item {query['bkgNo']} already exists in tracking database.")
-            else:
-                flash(f"Item {query['cntrNo']} already exists in tracking database.")
-            return False
-    except ConnectionFailure:
-        #log("[oneline.py] [check_db_records()]"\
-        #    + f" [DB Connection failure for {query}]")
-        flash("Database connection error.")
-        return False
-    except BaseException as err:
-        #log("[oneline.py] [check_db_records()]"\
-        #    + f" [{err.details} for {query}]")
-        flash("Unexpected error.")
+            flash(f"Item {query['cntrNo']} already exists in tracking database.")
         return False
 
 # DB content query helper functions
+@ping
 def tracking_status_content(conn, db):
     """Get tracking content from database."""
-    try:
-        conn.admin.command("ping")
-        active = db.tracking.count_documents(
-            {"user": g.user["name"], "trackEnd": None}
-            )
-        arrived = db.tracking.count_documents(
-            {"user": g.user["name"], "trackEnd": {"$ne": None}}
-            )
-        total = db.shipments.count_documents({"user": g.user["name"]})
-        content = {"active": active, "arrived": arrived, "total": total}
-        return content
-    except ConnectionFailure:
-        #log("[oneline.py] [check_db_records()]"\
-        #    + f" [DB Connection failure for {query}]")
-        return {"tracking": "Database connection failure."}
-    except BaseException as err:
-        #log("[oneline.py] [check_db_records()]"\
-        #    + f" [{err.details} for {query}]")
-        return {"tracking": "Unexpected error."}
+    active = db.tracking.count_documents(
+        {"user": g.user["name"], "trackEnd": None}
+        )
+    arrived = db.tracking.count_documents(
+        {"user": g.user["name"], "trackEnd": {"$ne": None}}
+        )
+    total = db.shipments.count_documents({"user": g.user["name"]})
+    content = {"active": active, "arrived": arrived, "total": total}
+    return content
 
+@ping
 def db_tracking_data(user, conn, db):
     """Get shipments that did not reach destination from
     tracking collection."""
@@ -143,50 +139,34 @@ def db_tracking_data(user, conn, db):
         #log("[oneline.py] [check_db_records()]"\
           #  + f" [Wrong query {query}]")
         return False
-    try:
-        conn.admin.command("ping")
-        tracking_cursor = db.tracking.aggregate(
-            [{"$match": {"user": user, "trackEnd": None}},
-             {"$sort": {"departureDate": 1}}]
-        )
-        return json.loads(dumps(tracking_cursor))
-    except ConnectionFailure:
-        #log("[oneline.py] [check_db_records()]"\
-        #    + f" [DB Connection failure for {query}]")
-        return False
-    except BaseException as err:
-        #log("[oneline.py] [check_db_records()]"\
-        #    + f" [{err.details} for {query}]")
-        #print(err)
-        return False
+    tracking_cursor = db.tracking.aggregate(
+        [{"$match": {"user": user, "trackEnd": None}},
+         {"$sort": {"departureDate": -1}}]
+    )
+    return json.loads(dumps(tracking_cursor))
 
 def schedule_table_data(records):
     """Prepare tracking shipments content."""
-    def to_date(microsec):
+    def to_date_str(microsec):
+        """Transform microseconds string into date string."""
         f_str = "%d-%m-%Y %H:%M"
         return strftime(f_str, gmtime(int(microsec) / 1000))
+
     table_data = {"table": []}
     for r in records:
-        #departure = None
-        #arrival = None
-        #for s in r["schedule"]:
-            #if s["event"].find("Departure from Port of Loading") > -1:
-                #departure = to_time(s["eventDate"]["$date"])
-            #if s["event"].find("Arrival at Port of Discharging") > -1:
-                #arrival = to_time(s["eventDate"]["$date"])
-    
         table_data["table"].append(
-            {"booking": r["bkgNo"], "container": r["cntrNo"], "type": r["cntrType"],
+            {"booking": r["bkgNo"], "container": r["cntrNo"],
+             "type": r["cntrType"],
              "from": {
                  "location": r["outboundTerminal"].split("|")[0],
                  "terminal": r["outboundTerminal"].split("|")[-1]
-             },
-             "departure": to_date(r["departureDate"]["$date"]),
+                },
+             "departure": to_date_str(r["departureDate"]["$date"]),
              "to": {
                  "location": r["inboundTerminal"].split("|")[0],
                  "terminal": r["inboundTerminal"].split("|")[-1]
-             },
-             "arrival": to_date(r["arrivalDate"]["$date"])
+                },
+             "arrival": to_date_str(r["arrivalDate"]["$date"])
             }
         )
     return table_data    
