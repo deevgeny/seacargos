@@ -104,9 +104,8 @@ def check_db_records(query, conn, db):
         #log("[oneline.py] [check_db_records()]"\
           #  + f" [Wrong query {query}]")
         return False
-    shipments = db.shipments.count_documents(query)
     tracking = db.tracking.count_documents(query)
-    if shipments == 0 and tracking == 0:
+    if tracking == 0:
         return True
     else:
         #log("[oneline.py] [check_db_records()]"\
@@ -141,7 +140,8 @@ def db_tracking_data(user, conn, db):
         return False
     tracking_cursor = db.tracking.aggregate(
         [{"$match": {"user": user, "trackEnd": None}},
-         {"$sort": {"departureDate": -1}}]
+         {"$sort": {"departureDate": -1}},
+         {"$project": {"schedule": 0}}]
     )
     return json.loads(dumps(tracking_cursor))
 

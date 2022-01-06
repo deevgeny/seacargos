@@ -148,6 +148,8 @@ def transform_data(data):
             if i["statusNm"].find("Arrival at Port of Discharging") > -1:
                 result["arrivalDate"] = to_date_obj(i["eventDt"])
         result["schedule"] = schedule
+        result["initSchedule"] = schedule
+   
     else:
         log("[oneline.py] [transform_data()]"\
             + f" [Keys do not match in schedule data {data['query']}]")
@@ -162,10 +164,6 @@ def load_data(data, conn, db):
         return {"tracking": "No data to load yet."}
     try:
         conn.admin.command("ping")
-        cur_shipments = db.shipments.insert_one(data)
-        if cur_shipments.acknowledged == False:
-            log("[oneline.py] [load_data()] "\
-                + f"[{data['bkgNo']} not loaded to shipments]")
         cur_tracking = db.tracking.insert_one(data)
         if cur_tracking.acknowledged == False:
             log("[oneline.py] [transform_data()] "\
