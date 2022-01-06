@@ -116,7 +116,7 @@ def check_db_records(query, conn, db):
             flash(f"Item {query['cntrNo']} already exists in tracking database.")
         return False
 
-# DB content query helper functions
+# Helper functions to prepare data from DB for dashboard get request
 @ping
 def tracking_status_content(conn, db):
     """Get tracking content from database."""
@@ -126,7 +126,7 @@ def tracking_status_content(conn, db):
     arrived = db.tracking.count_documents(
         {"user": g.user["name"], "trackEnd": {"$ne": None}}
         )
-    total = db.shipments.count_documents({"user": g.user["name"]})
+    total = db.tracking.count_documents({"user": g.user["name"]})
     content = {"active": active, "arrived": arrived, "total": total}
     return content
 
