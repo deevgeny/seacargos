@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sea Cargos Aggregator</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head> 
+
+  <body>
+    <div id="grid">
+      <div id="header" class="header-bar">
+        Sea Cargos Aggregator
+      </div>
+      <div id="top-menu" class="top-menu-bar"></div>
+      <div id="message">
+  
+</div>
+      <div id="content" class="content-container">
+  
+    <p>You are logged in as test.</p>
+    <p>Please go to your <a href="/dashboard">dashboard</a>
+    or <a href="/logout">logout</a>.</p>
+  
+</div>
+      <div id="footer" class="footer-bar">
+        Sea Cargos Aggregator Wep App
+      </div>
+    </div>
+  </body>
+</html>

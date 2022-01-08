@@ -119,7 +119,7 @@ def check_db_records(query, conn, db):
 # Helper functions to prepare data from DB for dashboard get request
 @ping
 def tracking_status_content(conn, db):
-    """Get tracking content from database."""
+    """Get tracking content summary from database."""
     active = db.tracking.count_documents(
         {"user": g.user["name"], "trackEnd": None}
         )
@@ -146,7 +146,7 @@ def db_tracking_data(user, conn, db):
     return json.loads(dumps(tracking_cursor))
 
 def schedule_table_data(records):
-    """Prepare tracking shipments content."""
+    """Prepare schedule data for schedule table."""
     def to_date_str(microsec):
         """Transform microseconds string into date string."""
         f_str = "%d-%m-%Y %H:%M"

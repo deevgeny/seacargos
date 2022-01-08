@@ -1,7 +1,4 @@
-from werkzeug.utils import redirect
-from seacargos import create_app
 from flask import g, session
-from seacargos.db import setup_db
 
 def test_home(client, app):
     """Test home page for unauthenticated user."""
@@ -46,3 +43,18 @@ def test_logout_valid_user(client, app):
         response = client.get("/logout")
         assert response.status_code == 302
         assert response.headers["Location"] == "http://localhost/"
+
+def test_home_content_for_logged_user(client, app):
+    """Test home page content for logged user."""
+    with app.app_context():
+        user = app.config["USER_NAME"]
+        pwd = app.config["USER_PASSWORD"]
+        response = client.post(
+            "/",
+            data={"username": user, "password": pwd})
+        assert response.status_code == 302
+        assert response.headers["Location"] == "http://localhost/dashboard"
+        response = client.get("/")
+        with open("tests/home_logged.txt", "rb") as f:
+            html = f.read()
+        assert response.data == html
