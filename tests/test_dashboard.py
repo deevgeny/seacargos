@@ -29,6 +29,7 @@ def test_validate_user_input(client, app):
             data={"username": user, "password": pwd})
         client.get("/")
         assert g.user != None
+
         # Test booking number condition
         assert validate_user_input("OSAB12345678") == \
             {"bkgNo": "OSAB12345678", "line": "ONE",
@@ -36,6 +37,7 @@ def test_validate_user_input(client, app):
         assert validate_user_input("osab12345678") == \
             {"bkgNo": "OSAB12345678", "line": "ONE",
             "user": "test", "trackEnd": None}
+
         # Test container number condition
         assert validate_user_input("TCKU1234567") == \
             {"cntrNo": "TCKU1234567", "line": "ONE",
@@ -43,14 +45,16 @@ def test_validate_user_input(client, app):
         assert validate_user_input("tcku1234567") == \
             {"cntrNo": "TCKU1234567", "line": "ONE",
             "user": "test", "trackEnd": None}
+        
+        # Test wrong booking number condition len = 12
         with app.test_request_context("/dashboard"):
-            # Test wrong booking number condition len = 12
             assert validate_user_input("12345678OSAB") == \
                 False
             assert get_flashed_messages() == \
                 ["Incorrect booking or container number 12345678OSAB"]
+        
+        # Test wrong booking number condition len > 12
         with app.test_request_context("/dashboard"):
-            # Test wrong booking number condition len > 12
             assert validate_user_input("OSAB123456789") == \
                 False
             assert get_flashed_messages() == \
@@ -95,6 +99,8 @@ def test_check_db_records(app):
             assert check_db_records(query_cntr, db) == False
             assert get_flashed_messages() == \
                 ["Item TCKU1234567 already exists in tracking database."]
+        
+        # Clean database
         db.tracking.delete_many({})
     
 def test_tracking_status_content(client, app):
@@ -125,6 +131,7 @@ def test_tracking_status_content(client, app):
         assert tracking_status_content(db) == \
             {"active": 1, "arrived": 1, "total": 2}
 
+        # Clean database
         db.tracking.delete_many({})
         
 def test_db_tracking_data(client, app):
