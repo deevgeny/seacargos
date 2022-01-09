@@ -1,7 +1,7 @@
 from flask import g, session, get_flashed_messages
 from seacargos.dashboard import (
     validate_user_input, check_db_records, tracking_status_content,
-    db_tracking_data
+    db_tracking_data, schedule_table_data
 )
 from seacargos.db import db_conn
 
@@ -169,6 +169,23 @@ def test_db_tracking_data(client, app):
         db.tracking.delete_many({})
             
 
-def test_schedule_table_data(client, app):
+def test_schedule_table_data():
     """Test schedule_table_data() function."""
-    pass
+    records = [{'cntrNo': 'SZLU3605702', 'cntrType': "20'REEFER",
+            'copNo': 'COSA1B09517221', 'bkgNo': 'OSAB67971900',
+            'blNo': 'OSAB67971900', 'user': 'test', 'line': 'ONE',
+            'trackStart': {'$date': 1641484241000}, 'trackEnd': None,
+            'outboundTerminal': 'NAGOYA, AICHI, JAPAN|TCB',
+            'departureDate': {'$date': 1641702600000},
+            'inboundTerminal': 'ST PETERSBURG, RUSSIAN FEDERATION|JSC',
+            'arrivalDate': {'$date': 1645243200000}, 'vesselName': None,
+            'location': None}]
+    table = {"table": [
+        {"arrival": "19-02-2022 04:00", "booking": "OSAB67971900",
+        "container": "SZLU3605702", "departure": "09-01-2022 04:30",
+        "from": {"location": "NAGOYA, AICHI, JAPAN", "terminal": "TCB"},
+        "to": {"location": "ST PETERSBURG, RUSSIAN FEDERATION",
+               "terminal": "JSC"},
+        "type": "20'REEFER"}
+        ]}
+    assert schedule_table_data(records) == table
