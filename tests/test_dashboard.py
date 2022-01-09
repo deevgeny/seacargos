@@ -1,5 +1,7 @@
 from flask import g, session, get_flashed_messages
-from seacargos.dashboard import validate_user_input, check_db_records
+from seacargos.dashboard import (
+    validate_user_input, check_db_records, tracking_status_content
+)
 from seacargos.db import db_conn
 
 def test_dashboard_response(client, app):
@@ -25,7 +27,7 @@ def test_validate_user_input(client, app):
         client.post(
             "/",
             data={"username": user, "password": pwd})
-        client.get("/dashboard")
+        client.get("/")
         assert g.user != None
         # Test booking number condition
         assert validate_user_input("OSAB12345678") == \
@@ -60,7 +62,7 @@ def test_validate_user_input(client, app):
             assert get_flashed_messages() == \
                 ["Incorrect booking or container number TCKU123456"]
 
-def test_check_db_records(client, app):
+def test_check_db_records(app):
     """Test check_db_records() function."""
     with app.app_context():
         db = db_conn()[g.db_name]
@@ -97,8 +99,34 @@ def test_check_db_records(client, app):
     
 def test_tracking_status_content(client, app):
     """Test tracking_status_content() function."""
-    pass
+    with app.app_context():
+        db = db_conn()[g.db_name]
 
+        # Check unauthenticated user request
+        assert tracking_status_content(db) == False
+
+        # Check authenticated user request
+        user = app.config["USER_NAME"]
+        pwd = app.config["USER_PASSWORD"]
+        client.post(
+            "/",
+            data={"username": user, "password": pwd})
+        client.get("/")
+        assert tracking_status_content(db) == \
+            {"active": 0, "arrived": 0, "total": 0}
+        
+        # Check total 1, active 1, arrived 0 condition
+        db.tracking.insert_one({"user": "test", "trackEnd": None})
+        assert tracking_status_content(db) == \
+            {"active": 1, "arrived": 0, "total": 1}
+        
+        # Check total 1, active 1, arrived 1 condition
+        db.tracking.insert_one({"user": "test", "trackEnd": "today"})
+        assert tracking_status_content(db) == \
+            {"active": 1, "arrived": 1, "total": 2}
+
+        db.tracking.delete_many({})
+        
 def test_db_tracking_data(client, app):
     """Test db_tracking_data() function."""
     pass
