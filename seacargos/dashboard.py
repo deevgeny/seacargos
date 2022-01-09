@@ -140,7 +140,7 @@ def db_tracking_data(user, db):
     tracking_cursor = db.tracking.aggregate(
         [{"$match": {"user": user, "trackEnd": None}},
          {"$sort": {"departureDate": -1}},
-         {"$project": {"schedule": 0}}]
+         {"$project": {"_id": 0, "schedule": 0, "initSchedule": 0}}]
     )
     return json.loads(dumps(tracking_cursor))
 

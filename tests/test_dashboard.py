@@ -1,6 +1,7 @@
 from flask import g, session, get_flashed_messages
 from seacargos.dashboard import (
-    validate_user_input, check_db_records, tracking_status_content
+    validate_user_input, check_db_records, tracking_status_content,
+    db_tracking_data
 )
 from seacargos.db import db_conn
 
@@ -136,7 +137,37 @@ def test_tracking_status_content(client, app):
         
 def test_db_tracking_data(client, app):
     """Test db_tracking_data() function."""
-    pass
+    with app.app_context():
+        # Check unauthenticated user
+        db = db_conn()[g.db_name]
+        assert db_tracking_data(None, db) == False
+
+        # Check authenticated user and empty db
+        user = app.config["USER_NAME"]
+        pwd = app.config["USER_PASSWORD"]
+        client.post(
+            "/",
+            data={"username": user, "password": pwd})
+        client.get("/")
+        assert db_tracking_data(g.user["name"], db) == []
+
+        # Check authenticated user and not empty db
+        record = {'cntrNo': 'SZLU3605702', 'cntrType': "20'REEFER",
+            'copNo': 'COSA1B09517221', 'bkgNo': 'OSAB67971900',
+            'blNo': 'OSAB67971900', 'user': 'test', 'line': 'ONE',
+            'trackStart': {'$date': 1641484241000}, 'trackEnd': None,
+            'outboundTerminal': 'NAGOYA, AICHI, JAPAN|TCB',
+            'departureDate': {'$date': 1641702600000},
+            'inboundTerminal': 'ST PETERSBURG, RUSSIAN FEDERATION|JSC',
+            'arrivalDate': {'$date': 1645243200000}, 'vesselName': None,
+            'location': None}
+        db.tracking.insert_one(record)
+        record.pop("_id", None)
+        assert db_tracking_data(g.user["name"], db) == [record]
+
+        # Clear db
+        db.tracking.delete_many({})
+            
 
 def test_schedule_table_data(client, app):
     """Test schedule_table_data() function."""
