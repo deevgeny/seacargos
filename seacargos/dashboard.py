@@ -48,20 +48,19 @@ def dashboard():
     if request.method == 'POST':
         user_input = request.form["booking"]
         query = validate_user_input(user_input)
-        #result = check_db_records(query, g.conn, db)
-        if check_db_records(query, conn, db):
+        if check_db_records(query, db):
             content.update(pipeline(query, conn, db))
     
     # GET request
-    content.update(tracking_status_content(conn, db))
-    tracking_data = db_tracking_data(g.user["name"], conn, db)
+    content.update(tracking_status_content(db))
+    tracking_data = db_tracking_data(g.user["name"], db)
     table_data = schedule_table_data(tracking_data)
     content.update(table_data)
 
     return render_template('dashboard/dashboard.html', content=content)
 
 def ping(func):
-    """Catch database CRUD ops exceptions """
+    """Catch database CRUD ops exceptions."""
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
@@ -88,7 +87,7 @@ def validate_user_input(user_input):
     elif len(user_input) == 11:
         return {
             "cntrNo": user_input.upper(), "line": "ONE",
-            "name": g.user["name"], "trackEnd": None
+            "user": g.user["name"], "trackEnd": None
             }
     else:
         flash(f"Incorrect booking or container number {user_input}")
@@ -96,7 +95,7 @@ def validate_user_input(user_input):
         return False
 
 @ping
-def check_db_records(query, conn, db):
+def check_db_records(query, db):
     """Use query argument to count documents in database
     shipments and tracking collections. Return True if count is 0
     in both collections."""
@@ -118,7 +117,7 @@ def check_db_records(query, conn, db):
 
 # Helper functions to prepare data from DB for dashboard get request
 @ping
-def tracking_status_content(conn, db):
+def tracking_status_content(db):
     """Get tracking content summary from database."""
     active = db.tracking.count_documents(
         {"user": g.user["name"], "trackEnd": None}
@@ -131,7 +130,7 @@ def tracking_status_content(conn, db):
     return content
 
 @ping
-def db_tracking_data(user, conn, db):
+def db_tracking_data(user, db):
     """Get shipments that did not reach destination from
     tracking collection."""
     if not user:
