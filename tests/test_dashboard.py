@@ -1,7 +1,8 @@
 from flask import g, session, get_flashed_messages
+from pymongo.mongo_client import MongoClient
 from seacargos.dashboard import (
     validate_user_input, check_db_records, tracking_status_content,
-    db_tracking_data, schedule_table_data
+    db_tracking_data, schedule_table_data, ping
 )
 from seacargos.db import db_conn
 
@@ -191,3 +192,26 @@ def test_schedule_table_data():
          "totalDays": 40}
         ]}
     assert schedule_table_data(records) == table
+
+def test_ping_decorator_function(app):
+    """Test ping function."""
+    with app.app_context():
+        # Prepare test function
+        @ping
+        def run_ping(conn):
+            conn.admin.command("ping")
+            return True
+
+        # Prepare connections
+        conn = db_conn()
+        bad_uri = app.config["DB_FRONTEND_URI"].replace("test", "best")
+        bad_conn = MongoClient(bad_uri)
+
+        # Check good connection
+        assert run_ping(conn) == True
+
+        # Check for ConnectionFailure error
+        assert run_ping(bad_conn) == False
+
+        # Check BaseException error
+        assert run_ping(None) == False
