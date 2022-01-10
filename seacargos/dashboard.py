@@ -12,6 +12,7 @@ from pymongo.errors import ConnectionFailure
 import json
 from bson.json_util import dumps
 from time import strftime, gmtime
+from datetime import datetime as dt
 
 bp = Blueprint('dashboard', __name__)
 
@@ -146,13 +147,15 @@ def db_tracking_data(user, db):
 
 def schedule_table_data(records):
     """Prepare schedule data for schedule table."""
-    def to_date_str(microsec):
-        """Transform microseconds string into date string."""
-        f_str = "%d-%m-%Y %H:%M"
-        return strftime(f_str, gmtime(int(microsec) / 1000))
-
+    format_string = "%d-%m-%Y %H:%M"
     table_data = {"table": []}
     for r in records:
+        # Transform UTC microseconds to local datetime object
+        dep_dt = dt.fromtimestamp(r["departureDate"]["$date"] / 1000)
+        arr_dt = dt.fromtimestamp(r["arrivalDate"]["$date"] / 1000)
+        # Find total number of days of delivery
+        total_days = (arr_dt - dep_dt).days
+        # Construct and append table data row
         table_data["table"].append(
             {"booking": r["bkgNo"], "container": r["cntrNo"],
              "type": r["cntrType"],
@@ -160,12 +163,13 @@ def schedule_table_data(records):
                  "location": r["outboundTerminal"].split("|")[0],
                  "terminal": r["outboundTerminal"].split("|")[-1]
                 },
-             "departure": to_date_str(r["departureDate"]["$date"]),
+             "departure": dt.strftime(dep_dt, format_string),
              "to": {
                  "location": r["inboundTerminal"].split("|")[0],
                  "terminal": r["inboundTerminal"].split("|")[-1]
                 },
-             "arrival": to_date_str(r["arrivalDate"]["$date"])
+             "arrival": dt.strftime(arr_dt, format_string),
+             "totalDays": total_days
             }
         )
     return table_data    

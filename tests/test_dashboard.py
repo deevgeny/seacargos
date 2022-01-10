@@ -181,11 +181,13 @@ def test_schedule_table_data():
             'arrivalDate': {'$date': 1645243200000}, 'vesselName': None,
             'location': None}]
     table = {"table": [
-        {"arrival": "19-02-2022 04:00", "booking": "OSAB67971900",
-        "container": "SZLU3605702", "departure": "09-01-2022 04:30",
-        "from": {"location": "NAGOYA, AICHI, JAPAN", "terminal": "TCB"},
-        "to": {"location": "ST PETERSBURG, RUSSIAN FEDERATION",
-               "terminal": "JSC"},
-        "type": "20'REEFER"}
+        {"booking": "OSAB67971900", "container": "SZLU3605702",
+         "type": "20'REEFER", 
+         "from": {"location": "NAGOYA, AICHI, JAPAN", "terminal": "TCB"},
+         "departure": "09-01-2022 07:30",
+         "to": {"location": "ST PETERSBURG, RUSSIAN FEDERATION",
+                "terminal": "JSC"},
+         "arrival": "19-02-2022 07:00",
+         "totalDays": 40}
         ]}
     assert schedule_table_data(records) == table
