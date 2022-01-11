@@ -18,8 +18,7 @@ def create_app(test_config=None):
         pass
 
     # Configure app
-    app.secret_key = "dev"
-    env = os.environ.get("FLASK_ENV")
+    env = os.environ.get("FLASK_ENV", "Not set")
     if test_config is None and env == "development":
         app.config.from_file("dev_config.json", load=json.load)
     elif test_config is None and env == "production":
