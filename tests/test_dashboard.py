@@ -6,8 +6,9 @@ from seacargos.dashboard import (
 )
 from seacargos.db import db_conn
 
-# Helper functions for running tests
+# Helper functions to run tests
 def login(client, user, pwd, follow=True):
+    """Simple login function."""
     return client.post(
         "/", data={"username": user, "password": pwd},
         follow_redirects=follow)

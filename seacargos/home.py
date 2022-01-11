@@ -10,16 +10,6 @@ from bson.objectid import ObjectId
 
 bp = Blueprint("home", __name__)
 
-def user_login_required(view):
-    @functools.wraps(view)
-    def wrapped_view(**kwargs):
-        if g.user is None:
-            return redirect(url_for("home"))
-        elif g.user["role"] != "user":
-            abort(403, "You are note authorized to view this page.")
-        return view(**kwargs)
-    return wrapped_view
-
 @bp.before_app_request
 def load_logged_in_user():
     """Loads logged in user from session to g."""
@@ -33,6 +23,7 @@ def load_logged_in_user():
 
 @bp.route("/", methods=("GET", "POST"))
 def home():
+    """Home view function (website entry point)."""
     if request.method == "POST":
         username = request.form['username']
         password = request.form['password']
@@ -41,20 +32,21 @@ def home():
         user = db.users.find_one({"name": username})
 
         if user is None:
-            error = {"error": "User with such name does not exist."}
+            error = "User with such name does not exist."
         elif not check_password_hash(user["password"], password):
-            error = {"error": "Incorrect password."}
+            error = "Incorrect password."
 
         if error is None:
             session.clear()
             session["user_id"] = user["_id"].__str__()
+            if user["role"] == "user":
+                return redirect(url_for("dashboard"))
             if user["role"] == "admin":
                 return redirect(url_for("admin"))
-            elif user["role"] == "user":
-                return redirect(url_for("dashboard"))
-        flash(error)
-    content = {}  
-    return render_template("home/home.html", content=content)
+        else:
+            flash(error)
+    
+    return render_template("home/home.html")
 
 @bp.route("/logout")
 def logout():
