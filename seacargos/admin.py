@@ -20,12 +20,10 @@ def admin_login_required(view):
 @bp.route('/admin')
 @admin_login_required
 def admin():
-    conn = db_conn()
-    db = conn.seacargos
+    db = db_conn()[g.db_name]
     content = {}
     content["vessels"] = db.vessels.count_documents({})
     content["users"] = db.users.count_documents({})
-    content["shipments"] = db.shipments.count_documents({})
     content["tracking"] = db.tracking.count_documents({})
     content["logs"] = db.logs.count_documents({})
     content['user'] = g.user

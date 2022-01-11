@@ -32,8 +32,8 @@
       <input type="submit" value="Add">
     </form>
   </div>
-  <div id="tracking-status" class="tracking-status-container">
-    <div class="caption">Tracking status</div>
+  <div id="tracking-summary" class="tracking-summary-container">
+    <div class="caption">Tracking summary</div>
     <div class="record">Active shipments: {{ content.active }}</div>
     <div class="record">Arrived shipments: {{ content.arrived }}</div>
     <div class="record">Total shipments: {{ content.total }}</div>
@@ -41,12 +41,12 @@
       <div class="message">{{ content.tracking }}</div>
     {% endif %}
   </div>
-  <div id="location-status" class="location-status-container">
-    <div class="caption">Location status</div>
+  <div id="location-summary" class="location-summary-container">
+    <div class="caption">Location summary</div>
   </div>
   <div id="schedule-table">
     {% if content.table %}
-    <div class="caption">Schedule data</div>
+    <div class="caption">Schedule</div>
     <table>
       <tr>
         <th>Booking</th>

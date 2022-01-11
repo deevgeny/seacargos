@@ -53,13 +53,14 @@ def dashboard():
             content.update(pipeline(query, conn, db))
     
     # GET request
-    content.update(tracking_status_content(db))
+    content.update(tracking_summary(db))
     tracking_data = db_tracking_data(g.user["name"], db)
     table_data = schedule_table_data(tracking_data)
     content.update(table_data)
 
     return render_template('dashboard/dashboard.html', content=content)
 
+# Helper functions
 def ping(func):
     """Catch database CRUD ops exceptions."""
     @functools.wraps(func)
@@ -76,7 +77,6 @@ def ping(func):
             return False
     return wrapper
 
-# User input validation helper functions
 def validate_user_input(user_input):
     """Validate user booking or container input.
     Return MongoDB query."""
@@ -104,8 +104,8 @@ def check_db_records(query, db):
         #log("[oneline.py] [check_db_records()]"\
           #  + f" [Wrong query {query}]")
         return False
-    tracking = db.tracking.count_documents(query)
-    if tracking == 0:
+    count = db.tracking.count_documents(query)
+    if count == 0:
         return True
     else:
         #log("[oneline.py] [check_db_records()]"\
@@ -116,10 +116,9 @@ def check_db_records(query, db):
             flash(f"Item {query['cntrNo']} already exists in tracking database.")
         return False
 
-# Helper functions to prepare data from DB for dashboard get request
 @ping
-def tracking_status_content(db):
-    """Get tracking content summary from database."""
+def tracking_summary(db):
+    """Get tracking summary from database."""
     active = db.tracking.count_documents(
         {"user": g.user["name"], "trackEnd": None}
         )
@@ -127,8 +126,8 @@ def tracking_status_content(db):
         {"user": g.user["name"], "trackEnd": {"$ne": None}}
         )
     total = db.tracking.count_documents({"user": g.user["name"]})
-    content = {"active": active, "arrived": arrived, "total": total}
-    return content
+    summary = {"active": active, "arrived": arrived, "total": total}
+    return summary
 
 @ping
 def db_tracking_data(user, db):

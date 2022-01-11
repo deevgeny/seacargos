@@ -21,7 +21,7 @@ body {
     }
     #dashboard {
         display: grid;
-        grid-template-areas: "tracking-form tracking-status location-status"
+        grid-template-areas: "tracking-form tracking-summary location-summary"
                              "schedule-table schedule-table schedule-table";
         grid-template-columns: auto 1fr auto;
         grid-template-rows: auto 1fr;
@@ -36,8 +36,8 @@ body {
 
     /* Dashboard elements */
     #tracking-form {grid-area: tracking-form; place-self: center left; margin-left: 10px;}
-    #tracking-status {grid-area: tracking-status; place-self: center center; margin: 0 10px 0;}
-    #location-status {grid-area: location-status; place-self: center right; margin-right: 10px;}
+    #tracking-summary {grid-area: tracking-summary; place-self: center center; margin: 0 10px 0;}
+    #location-summary {grid-area: location-summary; place-self: center right; margin-right: 10px;}
     #schedule-table {grid-area: schedule-table; place-self: center center; margin: 0 10px 0;}
 }
 
@@ -86,25 +86,25 @@ body {
     min-width: 300px;
 }
 
-.tracking-status-container {
+.tracking-summary-container {
     border: 1px solid black;
     min-height: 130px;
     min-width: 300px;
 }
-    .tracking-status-container .record {
+    .tracking-summary-container .record {
         font-size: 14px;
         text-align: left;
         margin: 5px 0 5px 10px;
 
     }
-    .tracking-status-container .message {
+    .tracking-summary-container .message {
         font-size: 14px;
         text-align: center;
         margin: 5px 10px;
         color: green;
     }
 
-.location-status-container {
+.location-summary-container {
     border: 1px solid black;
     min-height: 130px;
     min-width: 300px;

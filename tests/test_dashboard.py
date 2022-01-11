@@ -1,35 +1,73 @@
 from flask import g, session, get_flashed_messages
 from pymongo.mongo_client import MongoClient
 from seacargos.dashboard import (
-    validate_user_input, check_db_records, tracking_status_content,
+    validate_user_input, check_db_records, tracking_summary,
     db_tracking_data, schedule_table_data, ping
 )
 from seacargos.db import db_conn
 
+# Helper functions for running tests
+def login(client, user, pwd, follow=True):
+    return client.post(
+        "/", data={"username": user, "password": pwd},
+        follow_redirects=follow)
+
+# View tests
 def test_dashboard_response(client, app):
     """Test dashboard for authenticated and not authenticated users."""
     with app.app_context():
+        # Not logged user
         response = client.get("/dashboard")
         assert g.user == None
         assert response.status_code == 302
         assert response.headers["Location"] == "http://localhost/"
+
+        # Logged in user check redirects
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
-        response = client.post(
-            "/",
-            data={"username": user, "password": pwd})
+        response = login(client, user, pwd, False)
         assert response.status_code == 302
         assert response.headers["Location"] == "http://localhost/dashboard"
 
+        # Wrong user role
+        user = app.config["ADMIN_NAME"]
+        pwd = app.config["ADMIN_PASSWORD"]
+        login(client, user, pwd)
+        response = client.get("/dashboard")
+        assert response.status_code == 403
+        assert b'You are note authorized to view this page.' in response.data
+
+def test_dashboard_input_form(client, app):
+    """Test dashboard input form."""
+    with app.app_context():
+        # Login and add new record
+        db = db_conn()[g.db_name]
+        user = app.config["USER_NAME"]
+        pwd = app.config["USER_PASSWORD"]
+        login(client, user, pwd)
+        response = client.post(
+            "/dashboard", data={"booking": "OSAB67987900"},
+            follow_redirects=True)
+        assert b"New record successfully added to database" in response.data
+
+        # Try to add duplicated record 
+        response = client.post(
+            "/dashboard", data={"booking": "OSAB67987900"},
+            follow_redirects=True)
+        assert b"Item OSAB67987900 already exists in tracking database." in \
+            response.data
+
+        # Clean database after tests
+        db.tracking.delete_many({})
+ 
+
+# Helper functions tests
 def test_validate_user_input(client, app):
     """Test validate user input function."""
     with app.app_context():
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
-        client.post(
-            "/",
-            data={"username": user, "password": pwd})
-        client.get("/")
+        login(client, user, pwd)
         assert g.user != None
 
         # Test booking number condition
@@ -72,6 +110,8 @@ def test_check_db_records(app):
     """Test check_db_records() function."""
     with app.app_context():
         db = db_conn()[g.db_name]
+        # Check no query condition
+        assert check_db_records(None, db) == False
 
         # Check adding booking number
         query_bkg = {
@@ -105,32 +145,29 @@ def test_check_db_records(app):
         # Clean database
         db.tracking.delete_many({})
     
-def test_tracking_status_content(client, app):
+def test_tracking_summary(client, app):
     """Test tracking_status_content() function."""
     with app.app_context():
         db = db_conn()[g.db_name]
 
         # Check unauthenticated user request
-        assert tracking_status_content(db) == False
+        assert tracking_summary(db) == False
 
         # Check authenticated user request
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
-        client.post(
-            "/",
-            data={"username": user, "password": pwd})
-        client.get("/")
-        assert tracking_status_content(db) == \
+        login(client, user, pwd)
+        assert tracking_summary(db) == \
             {"active": 0, "arrived": 0, "total": 0}
         
         # Check total 1, active 1, arrived 0 condition
         db.tracking.insert_one({"user": "test", "trackEnd": None})
-        assert tracking_status_content(db) == \
+        assert tracking_summary(db) == \
             {"active": 1, "arrived": 0, "total": 1}
         
         # Check total 1, active 1, arrived 1 condition
         db.tracking.insert_one({"user": "test", "trackEnd": "today"})
-        assert tracking_status_content(db) == \
+        assert tracking_summary(db) == \
             {"active": 1, "arrived": 1, "total": 2}
 
         # Clean database
@@ -146,10 +183,7 @@ def test_db_tracking_data(client, app):
         # Check authenticated user and empty db
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
-        client.post(
-            "/",
-            data={"username": user, "password": pwd})
-        client.get("/")
+        login(client, user, pwd)
         assert db_tracking_data(g.user["name"], db) == []
 
         # Check authenticated user and not empty db
@@ -204,7 +238,7 @@ def test_ping_decorator_function(app):
 
         # Prepare connections
         conn = db_conn()
-        bad_uri = app.config["DB_FRONTEND_URI"].replace("test", "best")
+        bad_uri = app.config["DB_FRONTEND_URI"].replace("147", "146")
         bad_conn = MongoClient(bad_uri)
 
         # Check good connection
