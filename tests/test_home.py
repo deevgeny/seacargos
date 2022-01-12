@@ -1,5 +1,8 @@
 from flask import g, session
 
+from seacargos.db import db_conn
+from werkzeug.security import generate_password_hash
+
 # Helper functions to run tests
 def login(client, user, pwd, follow=True):
     """Simple login function."""
@@ -34,6 +37,17 @@ def test_home_simple_login(client, app):
         response = login(client, user, pwd)
         assert response.status_code == 200
         logout(client)
+        
+        # Log in user with role=fake
+        db = db_conn()[g.db_name]
+        pwd_hash = generate_password_hash("fake")
+        db.users.insert_one(
+            {"name": "fake", "password": pwd_hash, "role": "fake"}
+            )
+        response = login(client, "fake", "fake")
+        assert response.status_code == 200
+        logout(client)
+        db.users.delete_one({"name": "fake"})
 
 def test_home_redirects_on_login_and_logout(client, app):
     """Test redirects on login and logout."""
