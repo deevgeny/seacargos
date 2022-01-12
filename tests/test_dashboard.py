@@ -177,9 +177,9 @@ def test_tracking_summary(client, app):
 def test_db_tracking_data(client, app):
     """Test db_tracking_data() function."""
     with app.app_context():
-        # Check unauthenticated user
+        # Check unauthenticated user - deprication
         db = db_conn()[g.db_name]
-        assert db_tracking_data(None, db) == False
+        #assert db_tracking_data(None, db) == False
 
         # Check authenticated user and empty db
         user = app.config["USER_NAME"]

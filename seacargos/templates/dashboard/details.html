@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{# Add dashboard caption to title tag #}
+{% block title %}
+  {% if g.user %}
+    | Details
+  {% endif %}
+{% endblock title %}
+
+{# Display user name and logout link on top menu #}
+{% block top_menu %}
+  {% if g.user %}
+    User: {{ g.user['name'] }} | <a href="{{ url_for('home.logout')}}">Logout</a>
+  {% endif %}
+{% endblock top_menu %}
+
+{# Display messages if exists #}
+{% block messages %}
+  {% for message in get_flashed_messages() %} 
+    <div class="error-message">{{ message }}</div>
+  {% endfor %}
+{% endblock messages %}
+
+{# Page content block #}
+{% block content %}
+  <div id="schedule-table">
+    {# if content.table #}
+    <div class="caption">Details</div>
+    {{ content.table }}
+    
+    {# endif #}
+  </div>
+</div>
+{% endblock content %}

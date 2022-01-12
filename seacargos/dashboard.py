@@ -11,33 +11,33 @@ from seacargos.etl.oneline import pipeline
 from pymongo.errors import ConnectionFailure
 import json
 from bson.json_util import dumps
-from time import strftime, gmtime
 from datetime import datetime as dt
+from markupsafe import escape
 
-bp = Blueprint('dashboard', __name__)
+bp = Blueprint("dashboard", __name__)
 
 def user_login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
-            return redirect(url_for('home'))
-        elif g.user['role'] != 'user':
-            abort(403, 'You are note authorized to view this page.')
+            return redirect(url_for("home"))
+        elif g.user["role"] != "user":
+            abort(403, "You are note authorized to view this page.")
         return view(**kwargs)
     return wrapped_view
 
 @bp.before_app_request
 def load_logged_in_user():
     """Loads logged in user from session to g."""
-    user_id = session.get('user_id')
+    user_id = session.get("user_id")
 
     if user_id is None:
         g.user = None
     else:
         db = db_conn()[g.db_name]
-        g.user = db.users.find_one({'_id': ObjectId(user_id)})
+        g.user = db.users.find_one({"_id": ObjectId(user_id)})
 
-@bp.route('/dashboard', methods=('GET', 'POST'))
+@bp.route("/dashboard", methods=("GET", "POST"))
 @user_login_required
 def dashboard():
     """Home dashboard view function."""
@@ -46,7 +46,7 @@ def dashboard():
     content = {}
     
     # POST request
-    if request.method == 'POST':
+    if request.method == "POST":
         user_input = request.form["booking"]
         query = validate_user_input(user_input)
         if check_db_records(query, db):
@@ -58,7 +58,19 @@ def dashboard():
     table_data = schedule_table_data(tracking_data)
     content.update(table_data)
 
-    return render_template('dashboard/dashboard.html', content=content)
+    return render_template("dashboard/dashboard.html", content=content)
+
+@bp.route("/dashboard/<bkg_number>")
+@user_login_required
+def details(bkg_number):
+    """View to display shipment details."""
+    db = db_conn()[g.db_name]
+    records = db.tracking.find(
+        {"bkgNo": bkg_number, "trackEnd": None, "user": g.user["name"]}
+        )
+    content = {"table": json.loads(dumps(records))}
+    return render_template("/dashboard/details.html", content=content)
+
 
 # Helper functions
 def ping(func):
@@ -133,10 +145,10 @@ def tracking_summary(db):
 def db_tracking_data(user, db):
     """Get shipments that did not reach destination from
     tracking collection."""
-    if not user:
-        #log("[oneline.py] [check_db_records()]"\
+    #if not user: - deprication
+    #    #log("[oneline.py] [check_db_records()]"\
           #  + f" [Wrong query {query}]")
-        return False
+    #    return False
     tracking_cursor = db.tracking.aggregate(
         [{"$match": {"user": user, "trackEnd": None}},
          {"$sort": {"departureDate": -1}},
