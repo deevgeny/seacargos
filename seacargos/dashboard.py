@@ -149,38 +149,38 @@ def db_tracking_data(user, db):
     #    #log("[oneline.py] [check_db_records()]"\
           #  + f" [Wrong query {query}]")
     #    return False
-    tracking_cursor = db.tracking.aggregate(
+    cursor = db.tracking.aggregate(
         [{"$match": {"user": user, "trackEnd": None}},
          {"$sort": {"departureDate": -1}},
          {"$project": {"_id": 0, "schedule": 0, "initSchedule": 0}}]
     )
-    return json.loads(dumps(tracking_cursor))
+    return cursor #json.loads(dumps(tracking_cursor))
 
-def schedule_table_data(records):
+def schedule_table_data(cursor):
     """Prepare schedule data for schedule table."""
     format_string = "%d-%m-%Y %H:%M"
     table_data = {"table": []}
-    for r in records:
+    for c in cursor:
         # Transform UTC microseconds to local datetime object
-        dep_dt = dt.fromtimestamp(r["departureDate"]["$date"] / 1000)
-        arr_dt = dt.fromtimestamp(r["arrivalDate"]["$date"] / 1000)
+        #dep_dt = dt.fromtimestamp(r["departureDate"]["$date"] / 1000)
+        #arr_dt = dt.fromtimestamp(r["arrivalDate"]["$date"] / 1000)
         # Find total number of days of delivery
-        total_days = (arr_dt - dep_dt).days
+        #total_days = (arr_dt - dep_dt).days
         # Construct and append table data row
         table_data["table"].append(
-            {"booking": r["bkgNo"], "container": r["cntrNo"],
-             "type": r["cntrType"],
+            {"booking": c["bkgNo"], "container": c["cntrNo"],
+             "type": c["cntrType"],
              "from": {
-                 "location": r["outboundTerminal"].split("|")[0],
-                 "terminal": r["outboundTerminal"].split("|")[-1]
-                },
-             "departure": dt.strftime(dep_dt, format_string),
+                 "location": c["outboundTerminal"].split("|")[0],
+                 "terminal": c["outboundTerminal"].split("|")[-1]
+             },
+             "departure": dt.strftime(c["departureDate"], format_string),
              "to": {
-                 "location": r["inboundTerminal"].split("|")[0],
-                 "terminal": r["inboundTerminal"].split("|")[-1]
-                },
-             "arrival": dt.strftime(arr_dt, format_string),
-             "totalDays": total_days
+                 "location": c["inboundTerminal"].split("|")[0],
+                 "terminal": c["inboundTerminal"].split("|")[-1]
+             },
+             "arrival": dt.strftime(c["arrivalDate"], format_string),
+             "totalDays": (c["arrivalDate"] - c["departureDate"]).days
             }
         )
     return table_data    

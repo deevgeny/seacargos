@@ -5,6 +5,9 @@ from seacargos.dashboard import (
     db_tracking_data, schedule_table_data, ping
 )
 from seacargos.db import db_conn
+import json
+from bson.json_util import dumps
+from datetime import datetime
 
 # Helper functions to run tests
 def login(client, user, pwd, follow=True):
@@ -185,21 +188,35 @@ def test_db_tracking_data(client, app):
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
         login(client, user, pwd)
-        assert db_tracking_data(g.user["name"], db) == []
+        cursor = db.tracking.aggregate(
+            [{"$match": {"user": user, "trackEnd": None}},
+            {"$sort": {"departureDate": -1}},
+            {"$project": {"_id": 0, "schedule": 0, "initSchedule": 0}}]
+        )
+        ln = len(json.loads(dumps(cursor)))
+        check = len(json.loads(dumps(db_tracking_data(g.user["name"], db))))
+        assert check == ln
 
         # Check authenticated user and not empty db
         record = {'cntrNo': 'SZLU3605702', 'cntrType': "20'REEFER",
             'copNo': 'COSA1B09517221', 'bkgNo': 'OSAB67971900',
             'blNo': 'OSAB67971900', 'user': 'test', 'line': 'ONE',
-            'trackStart': {'$date': 1641484241000}, 'trackEnd': None,
+            'trackStart': datetime(2021, 12, 1, 7, 42), 'trackEnd': None,
             'outboundTerminal': 'NAGOYA, AICHI, JAPAN|TCB',
-            'departureDate': {'$date': 1641702600000},
+            'departureDate': datetime(2021, 12, 1, 7, 42),
             'inboundTerminal': 'ST PETERSBURG, RUSSIAN FEDERATION|JSC',
-            'arrivalDate': {'$date': 1645243200000}, 'vesselName': None,
+            'arrivalDate': datetime(2021, 12, 1, 7, 42), 'vesselName': None,
             'location': None}
         db.tracking.insert_one(record)
         record.pop("_id", None)
-        assert db_tracking_data(g.user["name"], db) == [record]
+        cursor = db.tracking.aggregate(
+            [{"$match": {"user": user, "trackEnd": None}},
+            {"$sort": {"departureDate": -1}},
+            {"$project": {"_id": 0, "schedule": 0, "initSchedule": 0}}]
+        )
+        ln = len(json.loads(dumps(cursor)))
+        check = len(json.loads(dumps(db_tracking_data(g.user["name"], db))))
+        assert check == ln
 
         # Clear db
         db.tracking.delete_many({})
@@ -210,21 +227,21 @@ def test_schedule_table_data():
     records = [{'cntrNo': 'SZLU3605702', 'cntrType': "20'REEFER",
             'copNo': 'COSA1B09517221', 'bkgNo': 'OSAB67971900',
             'blNo': 'OSAB67971900', 'user': 'test', 'line': 'ONE',
-            'trackStart': {'$date': 1641484241000}, 'trackEnd': None,
+            'trackStart': datetime(2021, 12, 1, 7, 42), 'trackEnd': None,
             'outboundTerminal': 'NAGOYA, AICHI, JAPAN|TCB',
-            'departureDate': {'$date': 1641702600000},
+            'departureDate': datetime(2021, 12, 1, 7, 42),
             'inboundTerminal': 'ST PETERSBURG, RUSSIAN FEDERATION|JSC',
-            'arrivalDate': {'$date': 1645243200000}, 'vesselName': None,
+            'arrivalDate': datetime(2021, 12, 10, 10, 0), 'vesselName': None,
             'location': None}]
     table = {"table": [
         {"booking": "OSAB67971900", "container": "SZLU3605702",
          "type": "20'REEFER", 
          "from": {"location": "NAGOYA, AICHI, JAPAN", "terminal": "TCB"},
-         "departure": "09-01-2022 07:30",
+         "departure": "01-12-2021 07:42",
          "to": {"location": "ST PETERSBURG, RUSSIAN FEDERATION",
                 "terminal": "JSC"},
-         "arrival": "19-02-2022 07:00",
-         "totalDays": 40}
+         "arrival": "10-12-2021 10:00",
+         "totalDays": 9}
         ]}
     assert schedule_table_data(records) == table
 
