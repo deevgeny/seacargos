@@ -54,8 +54,8 @@ def dashboard():
     
     # GET request
     content.update(tracking_summary(db))
-    tracking_data = db_tracking_data(g.user["name"], db)
-    table_data = schedule_table_data(tracking_data)
+    cursor = db_tracking_data(g.user["name"], db)
+    table_data = schedule_table_data(cursor)
     content.update(table_data)
 
     return render_template("dashboard/dashboard.html", content=content)
@@ -65,10 +65,30 @@ def dashboard():
 def details(bkg_number):
     """View to display shipment details."""
     db = db_conn()[g.db_name]
-    records = db.tracking.find(
+    content = {}
+    record = db.tracking.find_one(
         {"bkgNo": bkg_number, "trackEnd": None, "user": g.user["name"]}
         )
-    content = {"table": json.loads(dumps(records))}
+    format_string = "%d-%m-%Y %H:%M"
+    if record:
+        details = []
+        for i in zip(record["schedule"], record["initSchedule"]):
+            row = {}
+            if i[0]["event"] == i[1]["event"]:
+                row["event"] = i[0]["event"]
+            if i[0]["placeName"] == i[1]["placeName"]:
+                row["placeName"] = i[0]["placeName"]
+            if i[0]["placeName"] == i[1]["placeName"]:
+                row["placeName"] = i[0]["placeName"]
+            if i[0]["yardName"] == i[1]["yardName"]:
+                row["yardName"] = i[0]["yardName"]
+            row["plannedDate"] = dt.strftime(i[1]["eventDate"], format_string)
+            row["actualDate"] = dt.strftime(i[0]["eventDate"], format_string)
+            row["delta"] = (i[0]["eventDate"] - i[1]["eventDate"]).days
+            details.append(row)
+            content["details"] = details
+    else:
+        flash(f"Record {bkg_number} not found in database.")
     return render_template("/dashboard/details.html", content=content)
 
 

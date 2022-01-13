@@ -10,7 +10,7 @@
 {# Display user name and logout link on top menu #}
 {% block top_menu %}
   {% if g.user %}
-    User: {{ g.user['name'] }} | <a href="{{ url_for('home.logout')}}">Logout</a>
+    User: {{ g.user['name'] }} | <a href="{{ url_for('dashboard')}}">Dashboard</a> | <a href="{{ url_for('home.logout')}}">Logout</a>
   {% endif %}
 {% endblock top_menu %}
 
@@ -24,11 +24,27 @@
 {# Page content block #}
 {% block content %}
   <div id="schedule-table">
-    {# if content.table #}
-    <div class="caption">Details</div>
-    {{ content.table }}
-    
-    {# endif #}
+    {% if content.details %}
+      <div class="caption">Details</div>
+      <table>
+        <tr>
+          <th>Event</th>
+          <th>Location</th>
+          <th>Planned Date</th>
+          <th>Actual Date</th>
+          <th>Delta</th>
+        </tr>
+        {% for row in content.details %}
+        <tr>
+          <td>{{ row.event }}</td>
+          <td>{{ row.placeName }}<br>{{ row.yardName }}</td>
+          <td>{{ row.plannedDate }}</td>
+          <td>{{ row.actualDate }}</td>
+          <td>{{ row.delta }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    {% endif %}
   </div>
 </div>
 {% endblock content %}
