@@ -25,14 +25,15 @@
 {% block content %}
   <div id="schedule-table">
     {% if content.details %}
-      <div class="caption">Details</div>
+      <div class="caption">Details for {{ content.booking }}</div>
       <table>
         <tr>
           <th>Event</th>
           <th>Location</th>
           <th>Planned Date</th>
           <th>Actual Date</th>
-          <th>Delta</th>
+          <th>Delta Days</th>
+          <th>Status</th>
         </tr>
         {% for row in content.details %}
         <tr>
@@ -40,7 +41,12 @@
           <td>{{ row.placeName }}<br>{{ row.yardName }}</td>
           <td>{{ row.plannedDate }}</td>
           <td>{{ row.actualDate }}</td>
-          <td>{{ row.delta }}</td>
+          <td style="text-align:center;">{{ row.delta }}</td>
+        {% if row.status == "E" %}
+          <td class="check-box">&#9744</td>
+        {% elif row.status == "A" %}
+          <td class="check-box">&#9745</td>
+        {% endif %}
         </tr>
         {% endfor %}
       </table>

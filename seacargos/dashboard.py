@@ -85,12 +85,13 @@ def details(bkg_number):
             row["plannedDate"] = dt.strftime(i[1]["eventDate"], format_string)
             row["actualDate"] = dt.strftime(i[0]["eventDate"], format_string)
             row["delta"] = (i[0]["eventDate"] - i[1]["eventDate"]).days
+            row["status"] = i[0]["status"]
             details.append(row)
             content["details"] = details
+            content["booking"] = bkg_number
     else:
         flash(f"Record {bkg_number} not found in database.")
     return render_template("/dashboard/details.html", content=content)
-
 
 # Helper functions
 def ping(func):
@@ -165,27 +166,18 @@ def tracking_summary(db):
 def db_tracking_data(user, db):
     """Get shipments that did not reach destination from
     tracking collection."""
-    #if not user: - deprication
-    #    #log("[oneline.py] [check_db_records()]"\
-          #  + f" [Wrong query {query}]")
-    #    return False
     cursor = db.tracking.aggregate(
         [{"$match": {"user": user, "trackEnd": None}},
          {"$sort": {"departureDate": -1}},
          {"$project": {"_id": 0, "schedule": 0, "initSchedule": 0}}]
     )
-    return cursor #json.loads(dumps(tracking_cursor))
+    return cursor
 
 def schedule_table_data(cursor):
     """Prepare schedule data for schedule table."""
     format_string = "%d-%m-%Y %H:%M"
     table_data = {"table": []}
     for c in cursor:
-        # Transform UTC microseconds to local datetime object
-        #dep_dt = dt.fromtimestamp(r["departureDate"]["$date"] / 1000)
-        #arr_dt = dt.fromtimestamp(r["arrivalDate"]["$date"] / 1000)
-        # Find total number of days of delivery
-        #total_days = (arr_dt - dep_dt).days
         # Construct and append table data row
         table_data["table"].append(
             {"booking": c["bkgNo"], "container": c["cntrNo"],

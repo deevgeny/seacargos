@@ -60,7 +60,9 @@
       </tr>
       {% for row in content.table %}
         <tr>
-          <td>{{ row.booking }}</td>
+          <td>
+            <a href="{{ url_for('dashboard.details', bkg_number=row.booking) }}">{{ row.booking }}</a>
+          </td>
           <td>{{ row.container }}</td>
           <td>{{ row.type }}</td>
           <td>{{ row.from.location }}<br>{{ row.from.terminal }}</td>
