@@ -66,29 +66,10 @@ def details(bkg_number):
     """View to display shipment details."""
     db = db_conn()[g.db_name]
     content = {}
-    record = db.tracking.find_one(
-        {"bkgNo": bkg_number, "trackEnd": None, "user": g.user["name"]}
-        )
-    format_string = "%d-%m-%Y %H:%M"
+    record = db_get_record(db, bkg_number, g.user["name"])
     if record:
-        details = []
-        for i in zip(record["schedule"], record["initSchedule"]):
-            row = {}
-            if i[0]["event"] == i[1]["event"]:
-                row["event"] = i[0]["event"]
-            if i[0]["placeName"] == i[1]["placeName"]:
-                row["placeName"] = i[0]["placeName"]
-            if i[0]["placeName"] == i[1]["placeName"]:
-                row["placeName"] = i[0]["placeName"]
-            if i[0]["yardName"] == i[1]["yardName"]:
-                row["yardName"] = i[0]["yardName"]
-            row["plannedDate"] = dt.strftime(i[1]["eventDate"], format_string)
-            row["actualDate"] = dt.strftime(i[0]["eventDate"], format_string)
-            row["delta"] = (i[0]["eventDate"] - i[1]["eventDate"]).days
-            row["status"] = i[0]["status"]
-            details.append(row)
-            content["details"] = details
-            content["booking"] = bkg_number
+        content["details"] = prepare_record_details(record)
+        content["booking"] = bkg_number
     else:
         flash(f"Record {bkg_number} not found in database.")
     return render_template("/dashboard/details.html", content=content)
@@ -195,4 +176,29 @@ def schedule_table_data(cursor):
              "totalDays": (c["arrivalDate"] - c["departureDate"]).days
             }
         )
-    return table_data    
+    return table_data
+
+@ping
+def db_get_record(db, bkg_number, user):
+    """Get record from database tracking collection."""
+    return db.tracking.find_one(
+        {"bkgNo": bkg_number, "trackEnd": None, "user": user}
+        )
+
+def prepare_record_details(record):
+    """Prepare tracking collection record details."""
+    if record:
+        format_string = "%d-%m-%Y %H:%M"
+        details = []
+        for i in zip(record["schedule"], record["initSchedule"]):
+            row = {}
+            row["event"] = i[0]["event"]
+            row["placeName"] = i[0]["placeName"]
+            row["placeName"] = i[0]["placeName"]
+            row["yardName"] = i[0]["yardName"]
+            row["plannedDate"] = dt.strftime(i[1]["eventDate"], format_string)
+            row["actualDate"] = dt.strftime(i[0]["eventDate"], format_string)
+            row["delta"] = (i[0]["eventDate"] - i[1]["eventDate"]).days
+            row["status"] = i[0]["status"]
+            details.append(row)
+        return details
