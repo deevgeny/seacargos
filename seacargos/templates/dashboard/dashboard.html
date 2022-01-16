@@ -7,7 +7,14 @@
   {% endif %}
 {% endblock title %}
 
-{# Display user name and logout link on top menu #}
+{# Display user name and logout link on navigation menu #}
+{% block navigation_menu %}
+  {% if g.user %}
+    <a href="#">Update all</a>
+  {% endif %}
+{% endblock navigation_menu %}
+
+{# Display user name and logout link on login menu #}
 {% block login_menu %}
   {% if g.user %}
     User: {{ g.user['name'] }} | <a href="{{ url_for('home.logout')}}">Logout</a>
@@ -37,6 +44,7 @@
     <div class="record">Active shipments: {{ content.active }}</div>
     <div class="record">Arrived shipments: {{ content.arrived }}</div>
     <div class="record">Total shipments: {{ content.total }}</div>
+    <div class="record">Last update: some datetime</div>
     {% if content.tracking %}
       <div class="message">{{ content.tracking }}</div>
     {% endif %}

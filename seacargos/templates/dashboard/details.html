@@ -10,7 +10,7 @@
 {# Display user name and logout link on navigation menu #}
 {% block navigation_menu %}
   {% if g.user %}
-    <a href="{{ url_for('dashboard')}}">Dashboard</a>
+    <a href="{{ url_for('dashboard')}}">Dashboard</a> | <a href="#">Update</a> | <a href="#">Delete</a>
   {% endif %}
 {% endblock navigation_menu %}
 
