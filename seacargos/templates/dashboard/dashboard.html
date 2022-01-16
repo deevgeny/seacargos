@@ -8,11 +8,11 @@
 {% endblock title %}
 
 {# Display user name and logout link on top menu #}
-{% block top_menu %}
+{% block login_menu %}
   {% if g.user %}
     User: {{ g.user['name'] }} | <a href="{{ url_for('home.logout')}}">Logout</a>
   {% endif %}
-{% endblock top_menu %}
+{% endblock login_menu %}
 
 {# Display messages if exists #}
 {% block messages %}
@@ -69,7 +69,7 @@
           <td>{{ row.departure }}</td>
           <td>{{ row.to.location }}<br>{{ row.to.terminal }}</td>
           <td>{{ row.arrival }}</td>
-          <td>{{ row.totalDays }}</td>
+          <td style="text-align:center;">{{ row.totalDays }}</td>
         </tr>
       {% endfor %}
     </table>

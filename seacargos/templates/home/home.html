@@ -18,7 +18,7 @@
       <input type="submit" value="Log In">
     </form>
   {% else %}
-    <p>You are logged in as {{ g.user["name"] }}.</p>
+    <p>You are logged in under {{ g.user["name"] }} account.</p>
     <p>Please go to your <a href="{{ url_for('dashboard')}}">dashboard</a>
     or <a href="{{ url_for('home.logout')}}">logout</a>.</p>
   {% endif %}

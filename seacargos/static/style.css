@@ -12,7 +12,7 @@ body {
     #grid {
         display: grid;
         grid-template-areas: "header header"
-                             "top-menu top-menu"
+                             "navigation-menu login-menu"
                              "message message"
                              "content content" /* . means empty */
                              "footer footer";
@@ -29,7 +29,8 @@ body {
 
     /* Grid elements */
     #header {grid-area: header; justify-self: stretch;}
-    #top-menu {grid-area: top-menu; align-self: left;}
+    #navigation-menu {grid-area: navigation-menu; align-self: left;}
+    #login-menu {grid-area: login-menu; align-self: right;}
     #message {grid-area: message; align-self: start; justify-self: stretch;}
     #content {grid-area: content; justify-self: center;}
     #footer {grid-area: footer; justify-self: stretch;}
@@ -49,9 +50,16 @@ body {
     border-bottom: 1px solid black;
 }
 
-.top-menu-bar {
+.navigation-menu-bar {
     font-size: 14px;
     padding: 0 10px 0;
+    text-align: left;
+}
+
+.login-menu-bar {
+    font-size: 14px;
+    padding: 0 10px 0;
+    text-align: right;
 }
 
 .error-message {

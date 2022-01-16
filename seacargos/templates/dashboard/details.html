@@ -7,12 +7,19 @@
   {% endif %}
 {% endblock title %}
 
-{# Display user name and logout link on top menu #}
-{% block top_menu %}
+{# Display user name and logout link on navigation menu #}
+{% block navigation_menu %}
   {% if g.user %}
-    User: {{ g.user['name'] }} | <a href="{{ url_for('dashboard')}}">Dashboard</a> | <a href="{{ url_for('home.logout')}}">Logout</a>
+    <a href="{{ url_for('dashboard')}}">Dashboard</a>
   {% endif %}
-{% endblock top_menu %}
+{% endblock navigation_menu %}
+
+{# Display user name and logout link on login menu #}
+{% block login_menu %}
+  {% if g.user %}
+    User: {{ g.user['name'] }} | <a href="{{ url_for('home.logout')}}">Logout</a>
+  {% endif %}
+{% endblock login_menu %}
 
 {# Display messages if exists #}
 {% block messages %}
