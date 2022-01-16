@@ -2,12 +2,15 @@ from flask import g, session, get_flashed_messages
 from pymongo.mongo_client import MongoClient
 from seacargos.dashboard import (
     validate_user_input, check_db_records, tracking_summary,
-    db_tracking_data, schedule_table_data, ping
+    db_tracking_data, schedule_table_data, ping, db_get_record,
+    prepare_record_details
 )
 from seacargos.db import db_conn
 import json
 from bson.json_util import dumps
 from datetime import datetime
+from seacargos.etl.oneline import pipeline
+BOOKING_NUMBER = "OSAB67971900"
 
 # Helper functions to run tests
 def login(client, user, pwd, follow=True):
@@ -64,6 +67,35 @@ def test_dashboard_input_form(client, app):
         # Clean database after tests
         db.tracking.delete_many({})
  
+def test_details(client, app):
+    """Test details view.."""
+    with app.app_context():
+        # Not logged user
+        response = client.get("/dashboard/OSAB67971900")
+        assert g.user == None
+        assert response.status_code == 302
+        assert response.headers["Location"] == "http://localhost/"
+
+        # Logged in user check not existing record
+        user = app.config["USER_NAME"]
+        pwd = app.config["USER_PASSWORD"]
+        login(client, user, pwd)
+        response = client.get("/dashboard/OSAB67971900")
+        assert response.status_code == 200
+        assert b'Record OSAB67971900 not found in database.' in response.data
+
+        # Logged in user check existing record
+        conn = db_conn()
+        db = conn[g.db_name]
+        query = {"bkgNo": "OSAB67971900", "line": "ONE",
+                 "user": g.user["name"], "trackEnd": None} 
+        pipeline(query, conn, db)
+        response = client.get("/dashboard/OSAB67971900")
+        assert response.status_code == 200
+        assert b'Details for OSAB67971900' in response.data
+
+        # Clear test database
+        db.tracking.delete_many({})
 
 # Helper functions tests
 def test_validate_user_input(client, app):
@@ -267,3 +299,50 @@ def test_ping_decorator_function(app):
 
         # Check BaseException error
         assert run_ping(None) == False
+
+def test_db_get_record(app):
+    """Test db_get_record() function."""
+    with app.app_context():
+        conn = db_conn()
+        db = conn[g.db_name]
+        # Check empty database
+        assert db_get_record(db, "OSAB67971900", "test") == None
+
+        # Check non empty database condition
+        user = app.config["USER_NAME"]
+        query = {"bkgNo": "OSAB67971900", "line": "ONE",
+                 "user": user, "trackEnd": None} 
+        pipeline(query, conn, db)
+        record =  db_get_record(db, "OSAB67971900", "test")
+        assert record != None
+        assert isinstance(record, dict) == True 
+
+        # Clear test database
+        db.tracking.delete_many({})
+
+def test_prepare_record_details(app):
+    """Test prepare_record_details() function."""
+    with app.app_context():
+        # Check empty db condition
+        assert prepare_record_details(None) == None
+
+        # Check non empty db condition
+        conn = db_conn()
+        db = conn[g.db_name]
+        user = app.config["USER_NAME"]
+        query = {"bkgNo": BOOKING_NUMBER, "line": "ONE",
+                 "user": user, "trackEnd": None} 
+        pipeline(query, conn, db)
+        record =  db_get_record(db, BOOKING_NUMBER, "test")
+        details = prepare_record_details(record)
+        keys = ["event", "placeName", "yardName", "plannedDate",
+                "actualDate", "delta", "status"]
+        assert details != None
+        assert isinstance(details, list) == True
+        assert set(keys).issubset(set(details[0].keys())) == True
+
+        # Clear test database
+        db.tracking.delete_many({})
+
+
+        

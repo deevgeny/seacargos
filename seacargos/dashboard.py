@@ -194,7 +194,6 @@ def prepare_record_details(record):
             row = {}
             row["event"] = i[0]["event"]
             row["placeName"] = i[0]["placeName"]
-            row["placeName"] = i[0]["placeName"]
             row["yardName"] = i[0]["yardName"]
             row["plannedDate"] = dt.strftime(i[1]["eventDate"], format_string)
             row["actualDate"] = dt.strftime(i[0]["eventDate"], format_string)
