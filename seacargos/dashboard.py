@@ -140,7 +140,17 @@ def tracking_summary(db):
         {"user": g.user["name"], "trackEnd": {"$ne": None}}
         )
     total = db.tracking.count_documents({"user": g.user["name"]})
-    summary = {"active": active, "arrived": arrived, "total": total}
+    result = db.tracking.aggregate(
+        [{"$match": {"user": g.user["name"], "trackEnd": None}},
+         {"$sort": {"lastUpdate": -1}},
+         {"$limit": 1},
+         {"$project": {"lastUpdate": 1, "_id": 0}}]
+    )
+    if result._has_next():
+        format_string = "%d-%m-%Y %H:%M"
+        b = result.next()
+        string = b["lastUpdate"].strftime(format_string)
+    summary = {"active": active, "arrived": arrived, "total": total, "last_update": string}
     return summary
 
 @ping
@@ -167,12 +177,14 @@ def schedule_table_data(cursor):
                  "location": c["outboundTerminal"].split("|")[0],
                  "terminal": c["outboundTerminal"].split("|")[-1]
              },
-             "departure": dt.strftime(c["departureDate"], format_string),
+             #"departure": dt.strftime(c["departureDate"], format_string),
+             "departure": c["departureDate"].strftime(format_string),
              "to": {
                  "location": c["inboundTerminal"].split("|")[0],
                  "terminal": c["inboundTerminal"].split("|")[-1]
              },
-             "arrival": dt.strftime(c["arrivalDate"], format_string),
+             #"arrival": dt.strftime(c["arrivalDate"], format_string),
+             "arrival": c["arrivalDate"].strftime(format_string),
              "totalDays": (c["arrivalDate"] - c["departureDate"]).days
             }
         )

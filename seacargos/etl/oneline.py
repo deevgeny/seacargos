@@ -1,9 +1,7 @@
 import requests
 import time
 from datetime import datetime
-from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
-from bson.json_util import dumps
 
 URL = "https://ecomm.one-line.com/ecom/CUP_HOM_3301GS.do"
 
@@ -115,6 +113,7 @@ def transform_data(data):
             "blNo": data["container_data"]["blNo"],
             "user": data["query"]["user"], "line": data["query"]["line"],
             "trackStart": datetime.now().replace(microsecond=0),
+            "lastUpdate": datetime.now().replace(microsecond=0),
             "trackEnd": None, "outboundTerminal": "", "departureDate": "",
             "inboundTerminal": "", "arrivalDate": "", "vesselName": None,
             "location": None, "schedule": None,

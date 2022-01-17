@@ -101,6 +101,5 @@ def test_home_content_for_logged_user(client, app):
         pwd = app.config["USER_PASSWORD"]
         response = login(client, user, pwd)
         response = client.get("/")
-        with open("tests/home_logged.txt", "rb") as f:
-            html = f.read()
-        assert response.data == html
+        assert b'<a href="/dashboard">dashboard</a>' in response.data
+        assert b'<a href="/logout">logout</a>' in response.data
