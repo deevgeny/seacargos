@@ -16,6 +16,12 @@ from markupsafe import escape
 
 bp = Blueprint("dashboard", __name__)
 
+def log(message):
+    """Log function to log errors (debug version)."""
+    timestamp = dt.strftime(dt.now(), "%Y-%m-%d %H:%M:%S")
+    with open("etl.log", "a") as f:
+        f.write(timestamp + " " + message + "\n")
+
 def user_login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
@@ -82,12 +88,12 @@ def ping(func):
         try:
             return func(*args, **kwargs)
         except ConnectionFailure as e:
-            #log(f"[oneline.py] [{func.__name__}]"\
-            #    + f" [DB Connection failure for args {*args}]")
+            #log(f"[dashboard.py] [{func.__name__}]"\
+            #    + f" [DB Connection failure for args {args}]")
             return False
         except BaseException as e:
-            #log(f"[oneline.py] [{func.__name__}]"\
-            #    + f" [Base Exception {e} for args {*args}]")
+            #log(f"[dashboard.py] [{func.__name__}]"\
+            #    + f" [Base Exception: {e} for args: {args}]")
             return False
     return wrapper
 
@@ -140,17 +146,22 @@ def tracking_summary(db):
         {"user": g.user["name"], "trackEnd": {"$ne": None}}
         )
     total = db.tracking.count_documents({"user": g.user["name"]})
-    result = db.tracking.aggregate(
+    last_update = db.tracking.aggregate(
         [{"$match": {"user": g.user["name"], "trackEnd": None}},
          {"$sort": {"lastUpdate": -1}},
          {"$limit": 1},
          {"$project": {"lastUpdate": 1, "_id": 0}}]
     )
-    if result._has_next():
+
+    if last_update._has_next():
         format_string = "%d-%m-%Y %H:%M"
-        b = result.next()
-        string = b["lastUpdate"].strftime(format_string)
-    summary = {"active": active, "arrived": arrived, "total": total, "last_update": string}
+        record = last_update.next()
+        date = record["lastUpdate"].strftime(format_string)
+    else:
+        date = "-"
+
+    summary = {"active": active, "arrived": arrived,
+               "total": total, "updated_on": date}
     return summary
 
 @ping

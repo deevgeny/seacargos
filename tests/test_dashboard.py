@@ -186,25 +186,39 @@ def test_tracking_summary(client, app):
     with app.app_context():
         db = db_conn()[g.db_name]
 
-        # Check unauthenticated user request
-        assert tracking_summary(db) == False
-
-        # Check authenticated user request
+        # Login
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
         login(client, user, pwd)
+
+        # Check empty database
         assert tracking_summary(db) == \
-            {"active": 0, "arrived": 0, "total": 0}
+            {"active": 0, "arrived": 0, "total": 0, "updated_on": "-"}
         
-        # Check total 1, active 1, arrived 0 condition
-        db.tracking.insert_one({"user": "test", "trackEnd": None})
+        # Check total 1, active 1, arrived 0, last_update 2 condition
+        date_1 = datetime(2022, 1, 20, 00, 00, 00)
+        db.tracking.insert_one(
+            {"user": "test", "trackEnd": None, "lastUpdate": date_1}
+            )
         assert tracking_summary(db) == \
-            {"active": 1, "arrived": 0, "total": 1}
+            {"active": 1, "arrived": 0, "total": 1,
+            "updated_on": "20-01-2022 00:00"}
         
-        # Check total 1, active 1, arrived 1 condition
-        db.tracking.insert_one({"user": "test", "trackEnd": "today"})
+        # Check total 2, active 1, arrived 1, last_update 2 condition
+        date_2 = datetime(2022, 1, 25, 00, 00, 00)
+        db.tracking.insert_one(
+            {"user": "test", "trackEnd": date_2, "lastUpdate": date_2})
         assert tracking_summary(db) == \
-            {"active": 1, "arrived": 1, "total": 2}
+            {"active": 1, "arrived": 1, "total": 2,
+            "updated_on": "20-01-2022 00:00"}
+        
+        # Check total 3, active 2, arrived 1, last_update 1 condition
+        db.tracking.insert_one(
+            {"user": "test", "trackEnd": None, "lastUpdate": date_2}
+            )
+        assert tracking_summary(db) == \
+            {"active": 2, "arrived": 1, "total": 3,
+            "updated_on": "25-01-2022 00:00"}
 
         # Clean database
         db.tracking.delete_many({})
