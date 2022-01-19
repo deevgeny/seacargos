@@ -7,7 +7,7 @@ from werkzeug.exceptions import abort
 from werkzeug.security import check_password_hash, generate_password_hash
 from seacargos.db import db_conn
 from bson.objectid import ObjectId
-from seacargos.etl.oneline import pipeline
+from seacargos.etl.oneline import etl_one
 from pymongo.errors import ConnectionFailure
 import json
 from bson.json_util import dumps
@@ -56,7 +56,7 @@ def dashboard():
         user_input = request.form["booking"]
         query = validate_user_input(user_input)
         if check_db_records(query, db):
-            content.update(pipeline(query, conn, db))
+            content.update(etl_one(query, conn, db))
     
     # GET request
     content.update(tracking_summary(db))

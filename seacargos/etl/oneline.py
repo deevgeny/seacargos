@@ -177,8 +177,8 @@ def load_data(data, conn, db):
             + f"[{err.details} for {data['bkgNo']}]")
         return {"tracking": "Unexpected error."}
 
-# Main pipeline() function
-def pipeline(query, conn, db):
+# Main ETL function
+def etl_one(query, conn, db):
     """Main data pipeline flow."""
     raw_data = extract_data(query)
     transformed_data = transform_data(raw_data)

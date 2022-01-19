@@ -9,7 +9,7 @@ from seacargos.db import db_conn
 import json
 from bson.json_util import dumps
 from datetime import datetime
-from seacargos.etl.oneline import pipeline
+from seacargos.etl.oneline import etl_one
 BOOKING_NUMBER = "OSAB67971900"
 
 # Helper functions to run tests
@@ -89,7 +89,7 @@ def test_details(client, app):
         db = conn[g.db_name]
         query = {"bkgNo": "OSAB67971900", "line": "ONE",
                  "user": g.user["name"], "trackEnd": None} 
-        pipeline(query, conn, db)
+        etl_one(query, conn, db)
         response = client.get("/dashboard/OSAB67971900")
         assert response.status_code == 200
         assert b'Details for OSAB67971900' in response.data
@@ -326,7 +326,7 @@ def test_db_get_record(app):
         user = app.config["USER_NAME"]
         query = {"bkgNo": "OSAB67971900", "line": "ONE",
                  "user": user, "trackEnd": None} 
-        pipeline(query, conn, db)
+        etl_one(query, conn, db)
         record =  db_get_record(db, "OSAB67971900", "test")
         assert record != None
         assert isinstance(record, dict) == True 
@@ -346,7 +346,7 @@ def test_prepare_record_details(app):
         user = app.config["USER_NAME"]
         query = {"bkgNo": BOOKING_NUMBER, "line": "ONE",
                  "user": user, "trackEnd": None} 
-        pipeline(query, conn, db)
+        etl_one(query, conn, db)
         record =  db_get_record(db, BOOKING_NUMBER, "test")
         details = prepare_record_details(record)
         keys = ["event", "placeName", "yardName", "plannedDate",
