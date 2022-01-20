@@ -160,22 +160,22 @@ def load_data(data, conn, db):
     """Loads data into shipments and tracking collections."""
     if not data:
         log("[oneline.py] [load_data()] [No data to load]")
-        return {"tracking": "No data to load yet."}
+        return {"etl_message": "No data to load yet."}
     try:
         conn.admin.command("ping")
         cur_tracking = db.tracking.insert_one(data)
         if cur_tracking.acknowledged == False:
             log("[oneline.py] [transform_data()] "\
                 + f"[{data['bkgNo']} not loaded to tracking]")
-        return {"tracking": "New record successfully added to database"}
+        return {"etl_message": "New record successfully added to database"}
     except ConnectionFailure:
         log("[oneline.py] [transform_data()] "\
             + f"[Connection failure for {data['bkgNo']}]")
-        return {"tracking": "Database connection failure."}
+        return {"etl_message": "Database connection failure."}
     except BaseException as err:
         log("[oneline.py] [transform_data()] "\
             + f"[{err.details} for {data['bkgNo']}]")
-        return {"tracking": "Unexpected error."}
+        return {"etl_message": "Unexpected error."}
 
 # Main ETL function
 def etl_one(query, conn, db):

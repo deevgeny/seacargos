@@ -25,8 +25,8 @@ def load_logged_in_user():
 def home():
     """Home view function (website entry point)."""
     if request.method == "POST":
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form["username"]
+        password = request.form["password"]
         db = db_conn()[g.db_name]
         error = None
         user = db.users.find_one({"name": username})

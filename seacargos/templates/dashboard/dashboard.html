@@ -10,7 +10,7 @@
 {# Display user name and logout link on navigation menu #}
 {% block navigation_menu %}
   {% if g.user %}
-    <a href="#">Update all</a>
+    <a href="{{ url_for('dashboard.update') }}">Update all</a>
   {% endif %}
 {% endblock navigation_menu %}
 
@@ -45,8 +45,8 @@
     <div class="record">Arrived shipments: {{ content.arrived }}</div>
     <div class="record">Total shipments: {{ content.total }}</div>
     <div class="record">Last update: {{ content.updated_on }}</div>
-    {% if content.tracking %}
-      <div class="message">{{ content.tracking }}</div>
+    {% if content.etl_message %}
+      <div class="message">{{ content.etl_message }}</div>
     {% endif %}
   </div>
   <div id="location-summary" class="location-summary-container">

@@ -1,18 +1,21 @@
-import functools
-
 from flask import (
     Blueprint, flash, g, redirect, render_template, session, request, url_for
 )
 from werkzeug.exceptions import abort
 from werkzeug.security import check_password_hash, generate_password_hash
-from seacargos.db import db_conn
-from bson.objectid import ObjectId
-from seacargos.etl.oneline import etl_one
-from pymongo.errors import ConnectionFailure
-import json
-from bson.json_util import dumps
-from datetime import datetime as dt
 from markupsafe import escape
+
+import functools
+import json
+from datetime import datetime as dt
+from bson.json_util import dumps
+from bson.objectid import ObjectId
+from seacargos.db import db_conn
+from pymongo.errors import ConnectionFailure
+
+from seacargos.etl.oneline import etl_one
+from seacargos.etl.oneline_update import user_schedule_update
+from seacargos.etl.oneline_update import record_schedule_update
 
 bp = Blueprint("dashboard", __name__)
 
@@ -75,11 +78,32 @@ def details(bkg_number):
     record = db_get_record(db, bkg_number, g.user["name"])
     if record:
         content["details"] = prepare_record_details(record)
-        content["booking"] = bkg_number
+        content["bkg_number"] = bkg_number
     else:
         flash(f"Record {bkg_number} not found in database.")
     return render_template("/dashboard/details.html", content=content)
 
+@bp.route("/dashboard/update")
+@user_login_required
+def update():
+    """Update user shipments schedules for all records."""
+    conn = db_conn()
+    db = conn[g.db_name]
+    user = g.user["name"]
+    user_schedule_update(conn, db, user)
+
+    return redirect(url_for("dashboard"))
+
+@bp.route("/dashboard/update/<bkg_number>")
+@user_login_required
+def update_record(bkg_number):
+    """Update user shipment schedule for one record."""
+    conn = db_conn()
+    db = conn[g.db_name]
+    user = g.user["name"]
+    record_schedule_update(conn, db, user, bkg_number)
+
+    return redirect(url_for("dashboard.details", bkg_number=bkg_number))
 # Helper functions
 def ping(func):
     """Catch database CRUD ops exceptions."""

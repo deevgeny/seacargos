@@ -10,7 +10,9 @@
 {# Display user name and logout link on navigation menu #}
 {% block navigation_menu %}
   {% if g.user %}
-    <a href="{{ url_for('dashboard')}}">Dashboard</a> | <a href="#">Update</a> | <a href="#">Delete</a>
+    <a href="{{ url_for('dashboard')}}">Dashboard</a> | 
+    <a href="{{ url_for('dashboard.update_record', bkg_number=content.bkg_number) }}">Update record</a> | 
+    <a href="#">Delete</a>
   {% endif %}
 {% endblock navigation_menu %}
 
@@ -32,7 +34,7 @@
 {% block content %}
   <div id="schedule-table">
     {% if content.details %}
-      <div class="caption">Details for {{ content.booking }}</div>
+      <div class="caption">Details for {{ content.bkg_number }}</div>
       <table>
         <tr>
           <th>Status</th>

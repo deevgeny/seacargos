@@ -6,26 +6,35 @@ from datetime import datetime
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from bson.json_util import dumps
+import sys
+import os
 
 URL = "https://ecomm.one-line.com/ecom/CUP_HOM_3301GS.do"
 
+# ETL functions
 def log(message):
     """Log function to log errors."""
     timestamp = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
     with open("etl.log", "a") as f:
         f.write(timestamp + " " + message + "\n")
 
-def records_to_update(conn, db, user=None):
+def records_to_update(conn, db, user=None, bkg_number=None):
     """Prepare records which require update."""
     # Check function args
-    if user:
+    if user and bkg_number:
+        query = {"trackEnd": None, "user": user, "bkgNo": bkg_number}
+        project = {"user": 1, "bkgNo": 1, "copNo": 1, "_id": 0}
+    elif user:
         query = {"trackEnd": None, "user": user}
         project = {"user": 1, "bkgNo": 1, "copNo": 1, "_id": 0}
     else:  
         now = datetime.now().replace(microsecond=0)
         query = {
             "trackEnd": None,
-            "schedule": {"$elemMatch": {"status": "E", "eventDate": {"$lte": now}}}
+            "schedule": {"$elemMatch": {
+                "status": "E", "eventDate": {"$lte": now}
+                }
+            }
         }
         project = {"bkgNo": 1, "copNo": 1, "_id": 0}
     # Run query
@@ -107,6 +116,7 @@ def update(conn, db, records):
     # Check function args
     if not records:
         return False
+    last_update = datetime.now().replace(microsecond=0)
     try:
         conn.admin.command("ping")
         query = {"bkgNo": None, "trackEnd": None}
@@ -117,7 +127,11 @@ def update(conn, db, records):
                     query["user"] = rec["user"]
                 cur_tracking = db.tracking.update_one(
                     query,
-                    {"$set": {"schedule": rec["schedule"]}}
+                    {"$set": {
+                        "schedule": rec["schedule"],
+                        "lastUpdate": last_update
+                        }
+                    }
                 )
                 if cur_tracking.acknowledged == False:
                     log("[oneline_update.py] [update()] "\
@@ -187,18 +201,31 @@ def track_end(conn, db, records):
             + f"[{err.details}]")
         return False
 
+# Helper fuction for main()
+def conn_db(path, env):
+    """Return connection and database objects."""
+    with open(path, "r") as f:
+        conf = json.load(f)
+    conn = MongoClient(conf["DB_FRONTEND_URI"])
+    db = conn[env]
+    return conn, db
+
 # ETL Pipelines
-def regular_update(conn, db):
-    """Update records which require update for all users."""
+def regular_schedule_update(conn, db):
+    """Update records schedule which require update for all users.
+    Will be started on schedule by crontab."""
     records = records_to_update(conn, db)
     raw_data = extract_schedule_details(records)
     transformed_data = transform(raw_data)
     update(conn, db, transformed_data)
     arrived_records = arrived(conn, db)
     track_end(conn, db, arrived_records)
+    del db
+    conn.close()
 
-def user_update(conn, db, user):
-    """Update all records for single user."""
+def user_schedule_update(conn, db, user):
+    """Update all records schedule for single user.
+    Seacargos web app service."""
     records = records_to_update(conn, db, user)
     raw_data = extract_schedule_details(records)
     transformed_data = transform(raw_data)
@@ -206,5 +233,24 @@ def user_update(conn, db, user):
     arrived_records = arrived(conn, db, user)
     track_end(conn, db, arrived_records)
 
+def record_schedule_update(conn, db, user, bkg_number):
+    """Update one record schedule for single user."""
+    records = records_to_update(conn, db, user, bkg_number)
+    raw_data = extract_schedule_details(records)
+    transformed_data = transform(raw_data)
+    update(conn, db, transformed_data)
+
 if __name__ == "__main__":
-    pass
+    """Main function."""
+    env = os.environ.get("FLASK_ENV", "Not set")
+    dev_path = "../../instance/dev_config.json"
+    prod_path = "../../instance/prod_config.json"
+    if env == "development":
+        if os.path.exists(dev_path):
+            conn, db = conn_db(dev_path, env)
+    elif env == "production":
+        if os.path.exists(prod_path):
+            conn, db = conn_db(prod_path, env)
+    else:
+        sys.exit()
+    sys.exit(regular_update(conn, db))
