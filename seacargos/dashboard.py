@@ -62,7 +62,7 @@ def dashboard():
             content.update(etl_one(query, conn, db))
     
     # GET request
-    content.update(tracking_summary(db))
+    content.update(tracking_summary(db, g.user["name"]))
     cursor = db_tracking_data(g.user["name"], db)
     table_data = schedule_table_data(cursor)
     content.update(table_data)
@@ -79,6 +79,8 @@ def details(bkg_number):
     if record:
         content["details"] = prepare_record_details(record)
         content["bkg_number"] = bkg_number
+        content["record_update"] = \
+            dt.strftime(record["recordUpdate"], "%d-%m-%Y %H:%M")
     else:
         flash(f"Record {bkg_number} not found in database.")
     return render_template("/dashboard/details.html", content=content)
@@ -161,26 +163,26 @@ def check_db_records(query, db):
         return False
 
 @ping
-def tracking_summary(db):
+def tracking_summary(db, user):
     """Get tracking summary from database."""
     active = db.tracking.count_documents(
-        {"user": g.user["name"], "trackEnd": None}
+        {"user": user, "trackEnd": None}
         )
     arrived = db.tracking.count_documents(
-        {"user": g.user["name"], "trackEnd": {"$ne": None}}
+        {"user": user, "trackEnd": {"$ne": None}}
         )
-    total = db.tracking.count_documents({"user": g.user["name"]})
+    total = db.tracking.count_documents({"user": user})
     last_update = db.tracking.aggregate(
-        [{"$match": {"user": g.user["name"], "trackEnd": None}},
-         {"$sort": {"lastUpdate": -1}},
+        [{"$match": {"user": user, "trackEnd": None}},
+         {"$sort": {"regularUpdate": -1}},
          {"$limit": 1},
-         {"$project": {"lastUpdate": 1, "_id": 0}}]
+         {"$project": {"regularUpdate": 1, "_id": 0}}]
     )
 
     if last_update._has_next():
         format_string = "%d-%m-%Y %H:%M"
         record = last_update.next()
-        date = record["lastUpdate"].strftime(format_string)
+        date = record["regularUpdate"].strftime(format_string)
     else:
         date = "-"
 

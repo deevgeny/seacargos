@@ -105,6 +105,7 @@ def transform_data(data):
     # Check contnainer keys and extract container info
     cntr_keys = ["cntrNo", "cntrTpszNm", "copNo", "blNo"]
     if set(cntr_keys).issubset(set(data["container_data"])):
+        timestamp = datetime.now().replace(microsecond=0)
         result = {
             "cntrNo": data["container_data"]["cntrNo"],
             "cntrType": data["container_data"]["cntrTpszNm"],
@@ -112,8 +113,9 @@ def transform_data(data):
             "bkgNo": data["container_data"]["bkgNo"],
             "blNo": data["container_data"]["blNo"],
             "user": data["query"]["user"], "line": data["query"]["line"],
-            "trackStart": datetime.now().replace(microsecond=0),
-            "lastUpdate": datetime.now().replace(microsecond=0),
+            "trackStart": timestamp,
+            "regularUpdate": timestamp,
+            "recordUpdate": timestamp,
             "trackEnd": None, "outboundTerminal": "", "departureDate": "",
             "inboundTerminal": "", "arrivalDate": "", "vesselName": None,
             "location": None, "schedule": None,

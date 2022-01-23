@@ -88,52 +88,72 @@ def transform(records):
     # Check input
     if not records:
         return False
+    
+    def str_to_date(string):
+        """Convert string to date."""
+        return datetime.strptime(string, "%Y-%m-%d %H:%M")
+    
     # Check schedule keys and extract schedule data
     schedule_keys = ["no", "statusNm", "placeNm", "yardNm",
                      "eventDt", "actTpCd", "actTpCd", "vslEngNm",
                      "lloydNo"]
     for rec in records:
         if set(schedule_keys).issubset(set(rec["schedule"][0])):
-            schedule = [{
-                "no": int(i["no"]),
-                "event": i["statusNm"],
-                "placeName": i["placeNm"],
-                "yardName": i["yardNm"],
-                "eventDate": datetime.strptime(i["eventDt"], "%Y-%m-%d %H:%M"),
-                "status": i["actTpCd"],
-                "vesselName": i["vslEngNm"],
-                "imo": i["lloydNo"],
-            } for i in rec["schedule"]]
-            rec["schedule"] = schedule
+            transformed_schedule = []
+            for i in rec["schedule"]:
+                transformed_schedule.append(
+                    {"no": int(i["no"]),
+                     "event": i["statusNm"],
+                     "placeName": i["placeNm"],
+                     "yardName": i["yardNm"],
+                     "eventDate": str_to_date(i["eventDt"]),
+                     "status": i["actTpCd"],
+                     "vesselName": i["vslEngNm"],
+                     "imo": i["lloydNo"]}
+                )
+                if i["statusNm"].find("Departure from Port of Loading") > -1: 
+                    rec["departureDate"] = str_to_date(i["eventDt"])
+                if i["statusNm"].find("Arrival at Port of Discharging") > -1:
+                    rec["arrivalDate"] = str_to_date(i["eventDt"])
+            rec["schedule"] = transformed_schedule
         else:
             log("[oneline_update.py] [transform()] "\
                 + f"[Keys do not match in schedule data {rec['bkgNo']}]")
             rec["schedule"] = None
     return records
 
-def update(conn, db, records):
+def update(conn, db, records, regular_update=True):
     """Update records in database."""
     # Check function args
     if not records:
         return False
+
+    # Prepare reusable parameters
     last_update = datetime.now().replace(microsecond=0)
+    query = {"bkgNo": None, "trackEnd": None}
+    update = {"$set": {
+        "schedule": None,
+        "recordUpdate": last_update
+        }
+    }
+    if regular_update:
+        update["regularUpdate"] = last_update
+    
+    # Start update
     try:
         conn.admin.command("ping")
-        query = {"bkgNo": None, "trackEnd": None}
         for rec in records:
             if rec["schedule"]:
                 query["bkgNo"] = rec["bkgNo"]
+                update["$set"]["schedule"] = rec["schedule"]
                 if "user" in rec:
                     query["user"] = rec["user"]
-                cur_tracking = db.tracking.update_one(
-                    query,
-                    {"$set": {
-                        "schedule": rec["schedule"],
-                        "lastUpdate": last_update
-                        }
-                    }
-                )
-                if cur_tracking.acknowledged == False:
+                if "departureDate" in rec:
+                    update["$set"]["departureDate"] = rec["departureDate"]
+                if "arrivalDate" in rec:
+                    update["$set"]["arrivalDate"] = rec["arrivalDate"]
+                cursor = db.tracking.update_one(query, update)
+                if cursor.acknowledged == False:
                     log("[oneline_update.py] [update()] "\
                     + f"[{rec['bkgNo']} not updated for {rec.get('user', None)}]")
             else:
@@ -238,7 +258,7 @@ def record_schedule_update(conn, db, user, bkg_number):
     records = records_to_update(conn, db, user, bkg_number)
     raw_data = extract_schedule_details(records)
     transformed_data = transform(raw_data)
-    update(conn, db, transformed_data)
+    update(conn, db, transformed_data, False)
 
 if __name__ == "__main__":
     """Main function."""
@@ -253,4 +273,4 @@ if __name__ == "__main__":
             conn, db = conn_db(prod_path, env)
     else:
         sys.exit()
-    sys.exit(regular_update(conn, db))
+    sys.exit(regular_schedule_update(conn, db))

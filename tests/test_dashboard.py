@@ -192,31 +192,31 @@ def test_tracking_summary(client, app):
         login(client, user, pwd)
 
         # Check empty database
-        assert tracking_summary(db) == \
+        assert tracking_summary(db, user) == \
             {"active": 0, "arrived": 0, "total": 0, "updated_on": "-"}
         
         # Check total 1, active 1, arrived 0, last_update 2 condition
         date_1 = datetime(2022, 1, 20, 00, 00, 00)
         db.tracking.insert_one(
-            {"user": "test", "trackEnd": None, "lastUpdate": date_1}
+            {"user": "test", "trackEnd": None, "regularUpdate": date_1}
             )
-        assert tracking_summary(db) == \
+        assert tracking_summary(db, user) == \
             {"active": 1, "arrived": 0, "total": 1,
             "updated_on": "20-01-2022 00:00"}
         
         # Check total 2, active 1, arrived 1, last_update 2 condition
         date_2 = datetime(2022, 1, 25, 00, 00, 00)
         db.tracking.insert_one(
-            {"user": "test", "trackEnd": date_2, "lastUpdate": date_2})
-        assert tracking_summary(db) == \
+            {"user": "test", "trackEnd": date_2, "regularUpdate": date_2})
+        assert tracking_summary(db, user) == \
             {"active": 1, "arrived": 1, "total": 2,
             "updated_on": "20-01-2022 00:00"}
         
         # Check total 3, active 2, arrived 1, last_update 1 condition
         db.tracking.insert_one(
-            {"user": "test", "trackEnd": None, "lastUpdate": date_2}
+            {"user": "test", "trackEnd": None, "regularUpdate": date_2}
             )
-        assert tracking_summary(db) == \
+        assert tracking_summary(db, user) == \
             {"active": 2, "arrived": 1, "total": 3,
             "updated_on": "25-01-2022 00:00"}
 
