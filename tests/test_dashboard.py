@@ -105,7 +105,7 @@ def test_update(app, client):
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
         login(client, user, pwd)
-        # Prepare booking number 1 data
+        # Prepare booking number 1 test data
         client.post(
             "/dashboard", data={"booking": BKG_NO_1},
             follow_redirects=True)
@@ -114,7 +114,7 @@ def test_update(app, client):
             "recordUpdate": rec["recordUpdate"],
             "regularUpdate": rec["regularUpdate"]
         }
-        # Prepare booking number 2 data
+        # Prepare booking number 2 test data
         client.post(
             "/dashboard", data={"booking": BKG_NO_2},
             follow_redirects=True)
@@ -123,13 +123,14 @@ def test_update(app, client):
             "recordUpdate": rec["recordUpdate"],
             "regularUpdate": rec["regularUpdate"]
         }
+        # Update all records in database
         client.get("/dashboard/update", follow_redirects=True)
-        # Check booking number 1
+        # Check booking number 1 record
         rec = db.tracking.find_one({"bkgNo": BKG_NO_1})
         assert rec["recordUpdate"] == rec["regularUpdate"]
         assert rec["recordUpdate"] > bkg_no_1["recordUpdate"]
         assert rec["regularUpdate"] > bkg_no_1["regularUpdate"]
-        # Check booking number 2
+        # Check booking number 2 record
         rec = db.tracking.find_one({"bkgNo": BKG_NO_2})
         assert rec["recordUpdate"] == rec["regularUpdate"]
         assert rec["recordUpdate"] > bkg_no_2["recordUpdate"]
