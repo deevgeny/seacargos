@@ -258,7 +258,7 @@ def record_schedule_update(conn, db, user, bkg_number):
     records = records_to_update(conn, db, user, bkg_number)
     raw_data = extract_schedule_details(records)
     transformed_data = transform(raw_data)
-    update(conn, db, transformed_data, False)
+    update(conn, db, transformed_data, regular_update=False)
 
 if __name__ == "__main__":
     """Main function."""
@@ -272,5 +272,6 @@ if __name__ == "__main__":
         if os.path.exists(prod_path):
             conn, db = conn_db(prod_path, env)
     else:
+        # Add log
         sys.exit()
     sys.exit(regular_schedule_update(conn, db))

@@ -106,6 +106,7 @@ def update_record(bkg_number):
     record_schedule_update(conn, db, user, bkg_number)
 
     return redirect(url_for("dashboard.details", bkg_number=bkg_number))
+
 # Helper functions
 def ping(func):
     """Catch database CRUD ops exceptions."""

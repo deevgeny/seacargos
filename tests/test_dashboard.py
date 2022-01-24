@@ -10,7 +10,8 @@ import json
 from bson.json_util import dumps
 from datetime import datetime
 from seacargos.etl.oneline import etl_one
-BOOKING_NUMBER = "OSAB67971900"
+BKG_NO_1 = "OSAB67971900"
+BKG_NO_2 = "OSAB76049500"
 
 # Helper functions to run tests
 def login(client, user, pwd, follow=True):
@@ -53,15 +54,15 @@ def test_dashboard_input_form(client, app):
         pwd = app.config["USER_PASSWORD"]
         login(client, user, pwd)
         response = client.post(
-            "/dashboard", data={"booking": "OSAB67987900"},
+            "/dashboard", data={"booking": BKG_NO_1},
             follow_redirects=True)
         assert b"New record successfully added to database" in response.data
 
         # Try to add duplicated record 
         response = client.post(
-            "/dashboard", data={"booking": "OSAB67987900"},
+            "/dashboard", data={"booking": BKG_NO_1},
             follow_redirects=True)
-        assert b"Item OSAB67987900 already exists in tracking database." in \
+        assert b"Item OSAB67971900 already exists in tracking database." in \
             response.data
 
         # Clean database after tests
@@ -71,7 +72,7 @@ def test_details(client, app):
     """Test details view.."""
     with app.app_context():
         # Not logged user
-        response = client.get("/dashboard/OSAB67971900")
+        response = client.get(f"/dashboard/{BKG_NO_1}")
         assert g.user == None
         assert response.status_code == 302
         assert response.headers["Location"] == "http://localhost/"
@@ -80,21 +81,56 @@ def test_details(client, app):
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
         login(client, user, pwd)
-        response = client.get("/dashboard/OSAB67971900")
+        response = client.get(f"/dashboard/{BKG_NO_1}")
         assert response.status_code == 200
         assert b'Record OSAB67971900 not found in database.' in response.data
 
         # Logged in user check existing record
         conn = db_conn()
         db = conn[g.db_name]
-        query = {"bkgNo": "OSAB67971900", "line": "ONE",
+        query = {"bkgNo": BKG_NO_1, "line": "ONE",
                  "user": g.user["name"], "trackEnd": None} 
         etl_one(query, conn, db)
-        response = client.get("/dashboard/OSAB67971900")
+        response = client.get(f"/dashboard/{BKG_NO_1}")
         assert response.status_code == 200
         assert b'Details for OSAB67971900' in response.data
 
         # Clear test database
+        db.tracking.delete_many({})
+
+def test_update(app, client):
+    """Test update() view."""
+    with app.app_context():
+        db = db_conn()[g.db_name]
+        user = app.config["USER_NAME"]
+        pwd = app.config["USER_PASSWORD"]
+        login(client, user, pwd)
+        client.post(
+            "/dashboard", data={"booking": BKG_NO_1},
+            follow_redirects=True)
+        client.post(
+            "/dashboard", data={"booking": BKG_NO_2},
+            follow_redirects=True)
+        client.get("/dashboard/update", follow_redirects=True)
+        rec = db.tracking.find_one({"bkgNo": BKG_NO_1})
+        assert rec["recordUpdate"] == rec["regularUpdate"]
+        rec = db.tracking.find_one({"bkgNo": BKG_NO_2})
+        assert rec["recordUpdate"] == rec["regularUpdate"]
+        db.tracking.delete_many({})
+
+def test_update_record(app, client):
+    """Test update_record() view."""
+    with app.app_context():
+        db = db_conn()[g.db_name]
+        user = app.config["USER_NAME"]
+        pwd = app.config["USER_PASSWORD"]
+        login(client, user, pwd)
+        client.post(
+            "/dashboard", data={"booking": BKG_NO_1},
+            follow_redirects=True)
+        client.get(f"/dashboard/update/{BKG_NO_1}", follow_redirects=True)
+        rec = db.tracking.find_one({"bkgNo": BKG_NO_1})
+        assert rec["recordUpdate"] > rec["regularUpdate"]
         db.tracking.delete_many({})
 
 # Helper functions tests
@@ -320,14 +356,14 @@ def test_db_get_record(app):
         conn = db_conn()
         db = conn[g.db_name]
         # Check empty database
-        assert db_get_record(db, "OSAB67971900", "test") == None
+        assert db_get_record(db, BKG_NO_1, "test") == None
 
         # Check non empty database condition
         user = app.config["USER_NAME"]
-        query = {"bkgNo": "OSAB67971900", "line": "ONE",
+        query = {"bkgNo": BKG_NO_1, "line": "ONE",
                  "user": user, "trackEnd": None} 
         etl_one(query, conn, db)
-        record =  db_get_record(db, "OSAB67971900", "test")
+        record =  db_get_record(db, BKG_NO_1, "test")
         assert record != None
         assert isinstance(record, dict) == True 
 
@@ -344,10 +380,10 @@ def test_prepare_record_details(app):
         conn = db_conn()
         db = conn[g.db_name]
         user = app.config["USER_NAME"]
-        query = {"bkgNo": BOOKING_NUMBER, "line": "ONE",
+        query = {"bkgNo": BKG_NO_1, "line": "ONE",
                  "user": user, "trackEnd": None} 
         etl_one(query, conn, db)
-        record =  db_get_record(db, BOOKING_NUMBER, "test")
+        record =  db_get_record(db, BKG_NO_1, "test")
         details = prepare_record_details(record)
         keys = ["event", "placeName", "yardName", "plannedDate",
                 "actualDate", "delta", "status"]
@@ -357,6 +393,8 @@ def test_prepare_record_details(app):
 
         # Clear test database
         db.tracking.delete_many({})
+
+
 
 
         
