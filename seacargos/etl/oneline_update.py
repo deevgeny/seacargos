@@ -137,7 +137,7 @@ def update(conn, db, records, regular_update=True):
         }
     }
     if regular_update:
-        update["regularUpdate"] = last_update
+        update["$set"]["regularUpdate"] = last_update
     
     # Start update
     try:
