@@ -129,15 +129,15 @@ def update(conn, db, records, regular_update=True):
         return False
 
     # Prepare reusable parameters
-    last_update = datetime.now().replace(microsecond=0)
+    timestamp = datetime.now().replace(microsecond=0)
     query = {"bkgNo": None, "trackEnd": None}
     update = {"$set": {
         "schedule": None,
-        "recordUpdate": last_update
+        "recordUpdate": timestamp
         }
     }
     if regular_update:
-        update["$set"]["regularUpdate"] = last_update
+        update["$set"]["regularUpdate"] = timestamp
     
     # Start update
     try:
