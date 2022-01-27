@@ -268,10 +268,13 @@ if __name__ == "__main__":
     if env == "development":
         if os.path.exists(dev_path):
             conn, db = conn_db(dev_path, env)
-    elif env == "production":
+        else:
+            # Add log
+            sys.exit()
+    else:
         if os.path.exists(prod_path):
             conn, db = conn_db(prod_path, env)
-    else:
-        # Add log
-        sys.exit()
+        else:
+            # Add log
+            sys.exit()
     sys.exit(regular_schedule_update(conn, db))
