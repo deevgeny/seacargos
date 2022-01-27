@@ -7,9 +7,6 @@ from flask import Flask
 def create_app(test_config=None):
     # Create app
     app = Flask(__name__, instance_relative_config=True)
-    app.config.from_mapping(
-        {"DB_FRONTEND_URI": "mongodb://usr:pass@localhost:27017/"}
-    )
 
     # Ensure the instance folder exists
     try:
@@ -33,6 +30,8 @@ def create_app(test_config=None):
     from . import db
     db.init_app(app)
     if env == "development":
+        db.setup_db(app)
+    elif env == "production":
         db.setup_db(app)
 
     # Blueprints
