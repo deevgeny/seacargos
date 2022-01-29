@@ -62,6 +62,10 @@ def dashboard():
     if request.method == "POST":
         user_input = request.form["booking"]
         query = validate_user_input(user_input)
+        if len(request.form["refId"]) > 0:
+            query["refId"] = request.form["refId"]
+        else:
+            query["refId"] = "-"
         if check_db_records(query, db):
             content.update(etl_one(query, conn, db))
     
@@ -213,7 +217,8 @@ def schedule_table_data(cursor):
     for c in cursor:
         # Construct and append table data row
         table_data["table"].append(
-            {"booking": c["bkgNo"], "container": c["cntrNo"],
+            {"refId": c["refId"],
+             "booking": c["bkgNo"], "container": c["cntrNo"],
              "type": c["cntrType"],
              "from": {
                  "location": c["outboundTerminal"].split("|")[0],

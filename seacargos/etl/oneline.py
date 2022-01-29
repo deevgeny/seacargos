@@ -117,6 +117,7 @@ def transform_data(data):
             "bkgNo": data["container_data"]["bkgNo"],
             "blNo": data["container_data"]["blNo"],
             "user": data["query"]["user"], "line": data["query"]["line"],
+            "refId": data["query"]["refId"],
             "trackStart": timestamp,
             "regularUpdate": timestamp,
             "recordUpdate": timestamp,
