@@ -1,3 +1,7 @@
+# Seacargos - sea cargos aggregator web application.
+# Copyright (C) 2022  Evgeny Deriglazov
+# https://github.com/evgeny81d/seacargos/blob/main/LICENSE
+
 from pymongo import MongoClient, ASCENDING
 from pymongo.errors import ConnectionFailure
 from bson.json_util import dumps

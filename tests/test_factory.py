@@ -1,3 +1,7 @@
+# Seacargos - sea cargos aggregator web application.
+# Copyright (C) 2022  Evgeny Deriglazov
+# https://github.com/evgeny81d/seacargos/blob/main/LICENSE
+
 from seacargos import create_app
 from flask import g
 import os
