@@ -155,8 +155,12 @@ def update(conn, db, records, regular_update=True):
                     query["user"] = rec["user"]
                 if "departureDate" in rec:
                     update["$set"]["departureDate"] = rec["departureDate"]
+                if "outboundTerminal" in rec:
+                    update["$set"]["outboundTerminal"] = rec["outboundTerminal"]
                 if "arrivalDate" in rec:
                     update["$set"]["arrivalDate"] = rec["arrivalDate"]
+                if "inboundTerminal" in rec:
+                    update["$set"]["inboundTerminal"] = rec["inboundTerminal"]
                 cursor = db.tracking.update_one(query, update)
                 if cursor.acknowledged == False:
                     log("[oneline_update.py] [update()] "\
