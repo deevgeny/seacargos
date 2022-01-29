@@ -4,7 +4,7 @@ Sea cargos aggregator web application.
 ## Who can use it
 Any person or any company who have a need to track sea shipments.
 
-## How to use it
+## How it works
 Coming soon...
 
 ## How to install
