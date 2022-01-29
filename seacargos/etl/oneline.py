@@ -130,7 +130,7 @@ def transform_data(data):
     if set(schedule_keys).issubset(set(data["schedule_data"][0])):
         schedule = []
         for i in data["schedule_data"]:
-            # Add schedule item
+            # Add schedule item point
             schedule.append({
             "no": int(i["no"]), "event": i["statusNm"],
             "placeName": i["placeNm"], "yardName": i["yardNm"],
@@ -141,12 +141,10 @@ def transform_data(data):
             if i["statusNm"].find("Departure from Port of Loading") > -1:
                 result["outboundTerminal"] = i["placeNm"]\
                 + "|" + i["yardNm"]
-            if i["statusNm"].find("Departure from Port of Loading") > -1: 
                 result["departureDate"] = to_date_obj(i["eventDt"])
             if i["statusNm"].find("Arrival at Port of Discharging") > -1:
                 result["inboundTerminal"] = i["placeNm"]\
                 + "|" + i["yardNm"]
-            if i["statusNm"].find("Arrival at Port of Discharging") > -1:
                 result["arrivalDate"] = to_date_obj(i["eventDt"])
         result["schedule"] = schedule
         result["initSchedule"] = schedule

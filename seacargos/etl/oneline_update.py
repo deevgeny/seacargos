@@ -111,10 +111,15 @@ def transform(records):
                      "vesselName": i["vslEngNm"],
                      "imo": i["lloydNo"]}
                 )
+                # Update arr/dep dates and terminals
                 if i["statusNm"].find("Departure from Port of Loading") > -1: 
                     rec["departureDate"] = str_to_date(i["eventDt"])
+                    rec["outboundTerminal"] = i["placeNm"]\
+                        + "|" + i["yardNm"]
                 if i["statusNm"].find("Arrival at Port of Discharging") > -1:
                     rec["arrivalDate"] = str_to_date(i["eventDt"])
+                    rec["inboundTerminal"] = i["placeNm"]\
+                        + "|" + i["yardNm"]
             rec["schedule"] = transformed_schedule
         else:
             log("[oneline_update.py] [transform()] "\
