@@ -24,12 +24,11 @@ def log(message):
 def records_to_update(conn, db, user=None, bkg_number=None):
     """Prepare records which require update."""
     # Check function args
+    project = {"user": 1, "bkgNo": 1, "copNo": 1, "_id": 0}
     if user and bkg_number:
         query = {"trackEnd": None, "user": user, "bkgNo": bkg_number}
-        project = {"user": 1, "bkgNo": 1, "copNo": 1, "_id": 0}
     elif user:
         query = {"trackEnd": None, "user": user}
-        project = {"user": 1, "bkgNo": 1, "copNo": 1, "_id": 0}
     else:  
         now = datetime.now().replace(microsecond=0)
         query = {
@@ -39,7 +38,7 @@ def records_to_update(conn, db, user=None, bkg_number=None):
                 }
             }
         }
-        project = {"bkgNo": 1, "copNo": 1, "_id": 0}
+        project.pop("user")
     # Run query
     try:
         conn.admin.command("ping")
