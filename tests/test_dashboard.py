@@ -52,19 +52,31 @@ def test_dashboard_response(client, app):
 def test_dashboard_input_form(client, app):
     """Test dashboard input form."""
     with app.app_context():
-        # Login and add new record
+        # Login
         db = db_conn()[g.db_name]
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
         login(client, user, pwd)
+        # Add new record with empty refId
         response = client.post(
             "/dashboard", data={"booking": BKG_NO_1, "refId": ""},
             follow_redirects=True)
         assert b"New record successfully added to database" in response.data
+        rec = db.tracking.find_one({"bkgNo": BKG_NO_1})
+        assert rec["refId"] == "-"
+        db.tracking.delete_many({})
+        
+        # Add new record with non empty refId
+        response = client.post(
+            "/dashboard", data={"booking": BKG_NO_1, "refId": "id"},
+            follow_redirects=True)
+        assert b"New record successfully added to database" in response.data
+        rec = db.tracking.find_one({"bkgNo": BKG_NO_1})
+        assert rec["refId"] == "id"
 
         # Try to add duplicated record 
         response = client.post(
-            "/dashboard", data={"booking": BKG_NO_1, "refId": ""},
+            "/dashboard", data={"booking": BKG_NO_1, "refId": "id"},
             follow_redirects=True)
         assert b"Item OSAB67971900 already exists in tracking database." in \
             response.data
