@@ -38,9 +38,7 @@ def extract_container_data(payload):
     # Extract container details data
     if "list" in data:
         container_details = data["list"][0]
-        # Remove unnecessary data
-        if "hashColumns" in container_details:
-            del container_details["hashColumns"]
+        container_details.pop("hashColumns", None)
         return container_details
     else:
         log("[oneline.py] [extract_container_details()]"\

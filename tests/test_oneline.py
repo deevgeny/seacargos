@@ -3,7 +3,11 @@
 # https://github.com/evgeny81d/seacargos/blob/main/LICENSE
 
 import time
+import requests
 from seacargos.etl.oneline import container_request_payload
+from seacargos.etl.oneline import extract_container_data
+
+URL = "https://ecomm.one-line.com/ecom/CUP_HOM_3301GS.do"
 
 def test_container_request_payload():
     """Test container_request_payload() function."""
@@ -29,3 +33,38 @@ def test_container_request_payload():
     check["search_name"] = None
     result = container_request_payload({"empty": ""})
     assert result == check
+
+def test_extract_container_data():
+    """Test extract_container_data() function."""
+    # Prepare payload with booking number
+    payload = {
+            '_search': 'false', 'nd': str(time.time_ns())[:-6],
+            'rows': '10000', 'page': '1', 'sidx': '',
+            'sord': 'asc', 'f_cmd': '121', 'search_type': 'A',
+            'search_name': "OSAB76633400", 'cust_cd': '',
+        }
+    
+    # Check condition with booking number
+    r = requests.get(URL, params=payload)
+    check = r.json().get("list", None)
+    if check and isinstance(check, list):
+        check[0].pop("hashColumns", None)
+    data = extract_container_data(payload)
+    assert data == check[0]
+
+    # Check condition with container number
+    payload["search_name"] = "KKTU6079875"
+    r = requests.get(URL, params=payload)
+    check = r.json().get("list", None)
+    if check and isinstance(check, list):
+        check[0].pop("hashColumns", None)
+    data = extract_container_data(payload)
+    assert data == check[0]
+
+    # Extract wrong number
+    payload["search_name"] = "--test--"
+    data = extract_container_data(payload)
+    assert data == False
+    with open("etl.log", "r") as f:
+        check = f.read().split("\n")
+    assert "No details data for --test--" in check[-2]
