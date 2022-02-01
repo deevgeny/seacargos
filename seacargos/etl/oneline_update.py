@@ -19,7 +19,7 @@ def log(message):
     """Log function to log errors."""
     timestamp = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
     with open("etl.log", "a") as f:
-        f.write(timestamp + " " + message + "\n")
+        f.write("\n" + timestamp + " " + message)
 
 def records_to_update(conn, db, user=None, bkg_number=None):
     """Prepare records which require update."""

@@ -67,4 +67,4 @@ def test_extract_container_data():
     assert data == False
     with open("etl.log", "r") as f:
         check = f.read().split("\n")
-    assert "No details data for --test--" in check[-2]
+    assert "No details data for --test--" in check[-1]

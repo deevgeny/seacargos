@@ -27,7 +27,7 @@ def log(message):
     """Log function to log errors (debug version)."""
     timestamp = dt.strftime(dt.now(), "%Y-%m-%d %H:%M:%S")
     with open("etl.log", "a") as f:
-        f.write(timestamp + " " + message + "\n")
+        f.write("\n" + timestamp + " " + message)
 
 def user_login_required(view):
     @functools.wraps(view)

@@ -13,7 +13,7 @@ def log(message):
     """Log function to log errors."""
     timestamp = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
     with open("etl.log", "a") as f:
-        f.write(timestamp + " " + message + "\n")
+        f.write("\n" + timestamp + " " + message)
 
 # Helper function for main extract_data() function
 def container_request_payload(query):
