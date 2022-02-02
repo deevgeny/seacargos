@@ -78,6 +78,11 @@ def test_schedule_request_payload():
             'bkg_no': '', 'cop_no': None
         }
     cntr_data = {"cntrNo": "KKTU6079875", "copNo": None}
+    # Run test
     payload = schedule_request_payload(cntr_data)
     assert payload == check
+
+def test_extract_schedule_data():
+    """Test extract_schedule_data() function."""
+    pass
     
