@@ -49,7 +49,8 @@ def extract_container_data(payload):
 def schedule_request_payload(container_data):
     """Prepare payload for schedule details request."""
     payload = {
-            '_search': 'false', 'f_cmd': '125', 'cntr_no': container_data["cntrNo"],
+            '_search': 'false', 'f_cmd': '125',
+            'cntr_no': container_data["cntrNo"],
             'bkg_no': '', 'cop_no': container_data["copNo"]
         }
     return payload

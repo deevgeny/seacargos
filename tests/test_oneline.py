@@ -6,6 +6,7 @@ import time
 import requests
 from seacargos.etl.oneline import container_request_payload
 from seacargos.etl.oneline import extract_container_data
+from seacargos.etl.oneline import schedule_request_payload
 
 URL = "https://ecomm.one-line.com/ecom/CUP_HOM_3301GS.do"
 
@@ -68,3 +69,15 @@ def test_extract_container_data():
     with open("etl.log", "r") as f:
         check = f.read().split("\n")
     assert "No details data for --test--" in check[-1]
+
+def test_schedule_request_payload():
+    """Test schedule_request_payload() function."""
+    # Prepare test data
+    check = {
+            '_search': 'false', 'f_cmd': '125', 'cntr_no': "KKTU6079875",
+            'bkg_no': '', 'cop_no': None
+        }
+    cntr_data = {"cntrNo": "KKTU6079875", "copNo": None}
+    payload = schedule_request_payload(cntr_data)
+    assert payload == check
+    
