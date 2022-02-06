@@ -4,7 +4,7 @@
 
 import time
 import requests
-from seacargos.etl.oneline import container_request_payload
+from seacargos.etl.oneline import container_request_payload, extract_schedule_data
 from seacargos.etl.oneline import extract_container_data
 from seacargos.etl.oneline import schedule_request_payload
 
@@ -62,7 +62,7 @@ def test_extract_container_data():
     data = extract_container_data(payload)
     assert data == check[0]
 
-    # Extract wrong number
+    # Check condition for wrong number
     payload["search_name"] = "--test--"
     data = extract_container_data(payload)
     assert data == False
@@ -84,5 +84,32 @@ def test_schedule_request_payload():
 
 def test_extract_schedule_data():
     """Test extract_schedule_data() function."""
-    pass
+    # Prepare payload
+    # Run this is explicit declaration fails
+    #query = {"cntrNo": "KKTU6079875"}
+    #cntr_payload = container_request_payload(query)
+    #cntr_data = extract_container_data(cntr_payload)
+    #schedule_payload = schedule_request_payload(cntr_data)
+    #assert schedule_payload == 1
+    schedule_payload = {
+        "_search": "false", "bkg_no": "", "cntr_no": "KKTU6079875",
+        "cop_no": "COSA1C20995300", "f_cmd": "125"
+        }
     
+    # Check condition for container and cop number
+    data = extract_schedule_data(schedule_payload)
+    r = requests.get(URL, params=schedule_payload)
+    check_data = r.json()
+    if "list" in check_data:
+        check = check_data["list"]
+        check[0].pop("hashColumns", None)
+    assert data == check
+
+    # Check condition for wrong number (log record)
+    schedule_payload["cntr_no"] = "--test--"
+    schedule_payload["cop_no"] = None
+    data = extract_schedule_data(schedule_payload)
+    assert data == False
+    with open("etl.log", "r") as f:
+        check = f.read().split("\n")
+    assert "No schedule for container --test--" in check[-1]

@@ -63,12 +63,11 @@ def extract_schedule_data(payload):
     # Extract container schedule data
     if "list" in data:
         schedule_details = data["list"]
-        if "hashColumns" in schedule_details[0]:
-            del schedule_details[0]["hashColumns"]
+        schedule_details[0].pop("hashColumns", None)
         return schedule_details
     else:
         log("[oneline.py] [extract_schedule_details()]"\
-            + f" [No schedule for container {payload['cntrNo']}]")
+            + f" [No schedule for container {payload['cntr_no']}]")
         return False
 
 # Main extract_data() function
