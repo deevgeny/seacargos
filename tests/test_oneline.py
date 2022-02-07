@@ -145,10 +145,12 @@ def test_transform_data():
         check = f.read().split("\n")
     assert "[oneline.py] [transform_data()] [No raw data]" in check[-1]
 
-    # Missing container keys condition
+    # Prepare query
     query = {
         "bkgNo": "OSAB76633400", "user": None, "line": "ONE", "refId": "1"
         }
+    
+    # Missing container keys condition
     raw = extract_data(query)
     raw["container_data"].pop("cntrNo", None)
     data = transform_data(raw)
@@ -157,3 +159,5 @@ def test_transform_data():
         check = f.read().split("\n")
     assert "[oneline.py] [transform_data()]"\
         + f" [Keys do not match in container data {query}]" in check[-1]
+    
+    # Missing schedule keys condition
