@@ -7,6 +7,7 @@ import requests
 from seacargos.etl.oneline import container_request_payload, extract_schedule_data
 from seacargos.etl.oneline import extract_container_data
 from seacargos.etl.oneline import schedule_request_payload
+from seacargos.etl.oneline import extract_data
 
 URL = "https://ecomm.one-line.com/ecom/CUP_HOM_3301GS.do"
 
@@ -85,7 +86,7 @@ def test_schedule_request_payload():
 def test_extract_schedule_data():
     """Test extract_schedule_data() function."""
     # Prepare payload
-    # Run this is explicit declaration fails
+    # Run this if explicit declaration fails
     #query = {"cntrNo": "KKTU6079875"}
     #cntr_payload = container_request_payload(query)
     #cntr_data = extract_container_data(cntr_payload)
@@ -112,4 +113,22 @@ def test_extract_schedule_data():
     assert data == False
     with open("etl.log", "r") as f:
         check = f.read().split("\n")
-    assert "No schedule for container --test--" in check[-1]
+    assert "No schedule data for container --test--" in check[-1]
+
+def test_extract_data():
+    """Test extract_data() function."""
+    # Use bkgNo to extract data and check
+    data = extract_data({"bkgNo": "OSAB76633400"})
+    assert data["query"] == {"bkgNo": "OSAB76633400"}
+    assert "container_data" in data
+    assert "schedule_data" in data
+
+    # Empty query condition
+    data = extract_data({"empty": ""})
+    assert data == False
+    with open("etl.log", "r") as f:
+        check = f.read().split("\n")
+    assert "No container data for {'empty': ''}" in check[-1]
+
+    # If schedule data - not covered inside extract_data()
+

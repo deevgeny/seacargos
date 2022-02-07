@@ -67,7 +67,7 @@ def extract_schedule_data(payload):
         return schedule_details
     else:
         log("[oneline.py] [extract_schedule_details()]"\
-            + f" [No schedule for container {payload['cntr_no']}]")
+            + f" [No schedule data for container {payload['cntr_no']}]")
         return False
 
 # Main extract_data() function
