@@ -41,7 +41,7 @@ def extract_container_data(payload):
         container_details.pop("hashColumns", None)
         return container_details
     else:
-        log("[oneline.py] [extract_container_details()]"\
+        log("[oneline.py] [extract_container_data()]"\
             + f" [No details data for {payload['search_name']}]")
         return False
 
@@ -66,7 +66,7 @@ def extract_schedule_data(payload):
         schedule_details[0].pop("hashColumns", None)
         return schedule_details
     else:
-        log("[oneline.py] [extract_schedule_details()]"\
+        log("[oneline.py] [extract_schedule_data()]"\
             + f" [No schedule data for container {payload['cntr_no']}]")
         return False
 

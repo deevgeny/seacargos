@@ -8,6 +8,7 @@ from seacargos.etl.oneline import container_request_payload, extract_schedule_da
 from seacargos.etl.oneline import extract_container_data
 from seacargos.etl.oneline import schedule_request_payload
 from seacargos.etl.oneline import extract_data
+from seacargos.etl.oneline import transform_data
 
 URL = "https://ecomm.one-line.com/ecom/CUP_HOM_3301GS.do"
 
@@ -69,7 +70,8 @@ def test_extract_container_data():
     assert data == False
     with open("etl.log", "r") as f:
         check = f.read().split("\n")
-    assert "No details data for --test--" in check[-1]
+    assert "[oneline.py] [extract_container_data()]"\
+        + " [No details data for --test--]" in check[-1]
 
 def test_schedule_request_payload():
     """Test schedule_request_payload() function."""
@@ -113,7 +115,8 @@ def test_extract_schedule_data():
     assert data == False
     with open("etl.log", "r") as f:
         check = f.read().split("\n")
-    assert "No schedule data for container --test--" in check[-1]
+    assert "[oneline.py] [extract_schedule_data()]"\
+        +" [No schedule data for container --test--]" in check[-1]
 
 def test_extract_data():
     """Test extract_data() function."""
@@ -128,7 +131,29 @@ def test_extract_data():
     assert data == False
     with open("etl.log", "r") as f:
         check = f.read().split("\n")
-    assert "No container data for {'empty': ''}" in check[-1]
+    assert "[oneline.py] [extract_data()]"\
+        +" [No container data for {'empty': ''}]" in check[-1]
 
     # If schedule data - not covered inside extract_data()
 
+def test_transform_data():
+    """Test transform_data() function."""
+    # No data condition
+    data = transform_data(False)
+    assert data == False
+    with open("etl.log", "r") as f:
+        check = f.read().split("\n")
+    assert "[oneline.py] [transform_data()] [No raw data]" in check[-1]
+
+    # Missing container keys condition
+    query = {
+        "bkgNo": "OSAB76633400", "user": None, "line": "ONE", "refId": "1"
+        }
+    raw = extract_data(query)
+    raw["container_data"].pop("cntrNo", None)
+    data = transform_data(raw)
+    assert data == False
+    with open("etl.log", "r") as f:
+        check = f.read().split("\n")
+    assert "[oneline.py] [transform_data()]"\
+        + f" [Keys do not match in container data {query}]" in check[-1]
