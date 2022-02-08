@@ -120,6 +120,7 @@ def test_extract_schedule_data():
 
 def test_extract_data():
     """Test extract_data() function."""
+    # If schedule data condition - not covered inside extract_data()
     # Use bkgNo to extract data and check
     data = extract_data({"bkgNo": "OSAB76633400"})
     assert data["query"] == {"bkgNo": "OSAB76633400"}
@@ -134,10 +135,9 @@ def test_extract_data():
     assert "[oneline.py] [extract_data()]"\
         +" [No container data for {'empty': ''}]" in check[-1]
 
-    # If schedule data - not covered inside extract_data()
-
 def test_transform_data():
     """Test transform_data() function."""
+    # Inner function to_date_obj() not covered
     # No data condition
     data = transform_data(False)
     assert data == False
@@ -149,15 +149,42 @@ def test_transform_data():
     query = {
         "bkgNo": "OSAB76633400", "user": None, "line": "ONE", "refId": "1"
         }
-    
-    # Missing container keys condition
+
+    # Check container info keys
     raw = extract_data(query)
-    raw["container_data"].pop("cntrNo", None)
     data = transform_data(raw)
+    cntr_info_keys = [
+        "cntrNo", "cntrType", "copNo", "bkgNo", "blNo", "user", "refId",
+        "trackStart", "regularUpdate", "recordUpdate", "trackEnd",
+        "outboundTerminal", "departureDate", "inboundTerminal", "arrivalDate",
+        "vesselName", "location", "schedule", "initSchedule", "line"]
+    assert set(cntr_info_keys) == set(data)
+
+    # Check schedule keys
+    schedule_keys =[
+        "no", "event", "placeName", "yardName", "eventDate", "status", 
+        "vesselName", "imo"]
+    for i in data["schedule"]:
+        assert set(schedule_keys) == set(i)
+    for i in data["initSchedule"]:
+        assert set(schedule_keys) == set(i)
+
+    # Missing container keys condition
+    missing_keys = extract_data(query)
+    missing_keys["container_data"].pop("cntrNo", None)
+    data = transform_data(missing_keys)
     assert data == False
     with open("etl.log", "r") as f:
         check = f.read().split("\n")
     assert "[oneline.py] [transform_data()]"\
         + f" [Keys do not match in container data {query}]" in check[-1]
-    
+
     # Missing schedule keys condition
+    missing_keys = extract_data(query)
+    missing_keys["schedule_data"][0].pop("statusNm", None)
+    data = transform_data(missing_keys)
+    assert data == False
+    with open("etl.log", "r") as f:
+        check = f.read().split("\n")
+    assert "[oneline.py] [transform_data()]"\
+        + f" [Keys do not match in schedule data {query}]" in check[-1]
