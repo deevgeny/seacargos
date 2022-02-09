@@ -4,13 +4,22 @@
 
 import time
 import requests
+from pymongo.mongo_client import MongoClient
 from seacargos.etl.oneline import container_request_payload, extract_schedule_data
 from seacargos.etl.oneline import extract_container_data
 from seacargos.etl.oneline import schedule_request_payload
 from seacargos.etl.oneline import extract_data
 from seacargos.etl.oneline import transform_data
+from seacargos.etl.oneline import load_data
 
 URL = "https://ecomm.one-line.com/ecom/CUP_HOM_3301GS.do"
+
+# Helper functions to run tests
+def login(client, user, pwd, follow=True):
+    """Simple login function."""
+    return client.post(
+        "/", data={"username": user, "password": pwd},
+        follow_redirects=follow)
 
 def test_container_request_payload():
     """Test container_request_payload() function."""
@@ -188,3 +197,41 @@ def test_transform_data():
         check = f.read().split("\n")
     assert "[oneline.py] [transform_data()]"\
         + f" [Keys do not match in schedule data {query}]" in check[-1]
+
+def test_load_data(app):
+    """Test load_data() function."""
+    with app.app_context():
+        uri = app.config["DB_FRONTEND_URI"]
+        db_name = app.config["DB_NAME"]
+        conn = MongoClient(uri)
+        db = conn[db_name]
+
+        # Test empty data and log recording
+        result = load_data(False, conn, db)
+        assert result == {"etl_message": "No data to load yet."}
+        with open("etl.log", "r") as f:
+            check = f.read().split("\n")
+        assert "[oneline.py] [load_data()] [No data to load]" in check[-1]
+
+        # Write record to db condition check
+        query = {
+            "bkgNo": "OSAB76633400", "user": None, "line": "ONE", "refId": "1"
+        }
+        raw = extract_data(query)
+        data = transform_data(raw)
+        assert db.tracking.count_documents({}) == 0
+        result = load_data(data, conn, db)
+        assert result == {
+            "etl_message": "New record successfully added"
+            }
+        assert db.tracking.count_documents({}) == 1
+        db.tracking.delete_many({})
+
+        # Cursor.acknowledged == False condition check
+
+        # Connection failure condition check
+
+        # Base Exception condition check
+
+        # Close db connection
+        conn.close()

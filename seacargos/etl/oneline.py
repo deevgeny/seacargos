@@ -170,15 +170,17 @@ def load_data(data, conn, db):
         if cur_tracking.acknowledged == False:
             log("[oneline.py] [transform_data()] "\
                 + f"[{data['bkgNo']} not loaded to tracking]")
-        return {"etl_message": "New record successfully added to database"}
+            return {"etl_message": "Write operation failure"}
+        else:
+            return {"etl_message": "New record successfully added"}
     except ConnectionFailure:
         log("[oneline.py] [transform_data()] "\
             + f"[Connection failure for {data['bkgNo']}]")
-        return {"etl_message": "Database connection failure."}
+        return {"etl_message": "Database connection failure"}
     except BaseException as err:
         log("[oneline.py] [transform_data()] "\
             + f"[{err.details} for {data['bkgNo']}]")
-        return {"etl_message": "Unexpected error."}
+        return {"etl_message": "Unexpected error"}
 
 # Main ETL function
 def etl_one(query, conn, db):

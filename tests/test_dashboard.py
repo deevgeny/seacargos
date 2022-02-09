@@ -61,7 +61,7 @@ def test_dashboard_input_form(client, app):
         response = client.post(
             "/dashboard", data={"booking": BKG_NO_1, "refId": ""},
             follow_redirects=True)
-        assert b"New record successfully added to database" in response.data
+        assert b"New record successfully added" in response.data
         rec = db.tracking.find_one({"bkgNo": BKG_NO_1})
         assert rec["refId"] == "-"
         db.tracking.delete_many({})
@@ -70,7 +70,7 @@ def test_dashboard_input_form(client, app):
         response = client.post(
             "/dashboard", data={"booking": BKG_NO_1, "refId": "id"},
             follow_redirects=True)
-        assert b"New record successfully added to database" in response.data
+        assert b"New record successfully added" in response.data
         rec = db.tracking.find_one({"bkgNo": BKG_NO_1})
         assert rec["refId"] == "id"
 
