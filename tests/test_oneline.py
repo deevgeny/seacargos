@@ -5,12 +5,14 @@
 import time
 import requests
 from pymongo.mongo_client import MongoClient
+from pymongo import ASCENDING
 from seacargos.etl.oneline import container_request_payload, extract_schedule_data
 from seacargos.etl.oneline import extract_container_data
 from seacargos.etl.oneline import schedule_request_payload
 from seacargos.etl.oneline import extract_data
 from seacargos.etl.oneline import transform_data
 from seacargos.etl.oneline import load_data
+from seacargos.etl.oneline import etl_one
 
 URL = "https://ecomm.one-line.com/ecom/CUP_HOM_3301GS.do"
 
@@ -77,6 +79,7 @@ def test_extract_container_data():
     payload["search_name"] = "--test--"
     data = extract_container_data(payload)
     assert data == False
+    # Verify log record
     with open("etl.log", "r") as f:
         check = f.read().split("\n")
     assert "[oneline.py] [extract_container_data()]"\
@@ -122,6 +125,7 @@ def test_extract_schedule_data():
     schedule_payload["cop_no"] = None
     data = extract_schedule_data(schedule_payload)
     assert data == False
+    # Verify log record
     with open("etl.log", "r") as f:
         check = f.read().split("\n")
     assert "[oneline.py] [extract_schedule_data()]"\
@@ -139,6 +143,7 @@ def test_extract_data():
     # Empty query condition
     data = extract_data({"empty": ""})
     assert data == False
+    # Verify log record
     with open("etl.log", "r") as f:
         check = f.read().split("\n")
     assert "[oneline.py] [extract_data()]"\
@@ -150,6 +155,7 @@ def test_transform_data():
     # No data condition
     data = transform_data(False)
     assert data == False
+    # Verify log record
     with open("etl.log", "r") as f:
         check = f.read().split("\n")
     assert "[oneline.py] [transform_data()] [No raw data]" in check[-1]
@@ -183,6 +189,7 @@ def test_transform_data():
     missing_keys["container_data"].pop("cntrNo", None)
     data = transform_data(missing_keys)
     assert data == False
+    # Verify log record
     with open("etl.log", "r") as f:
         check = f.read().split("\n")
     assert "[oneline.py] [transform_data()]"\
@@ -193,6 +200,7 @@ def test_transform_data():
     missing_keys["schedule_data"][0].pop("statusNm", None)
     data = transform_data(missing_keys)
     assert data == False
+    # Verify log record
     with open("etl.log", "r") as f:
         check = f.read().split("\n")
     assert "[oneline.py] [transform_data()]"\
@@ -200,20 +208,24 @@ def test_transform_data():
 
 def test_load_data(app):
     """Test load_data() function."""
+    # Cursor.acknowledged == False condition not covered
     with app.app_context():
+        # Prepare variables and database
         uri = app.config["DB_FRONTEND_URI"]
         db_name = app.config["DB_NAME"]
         conn = MongoClient(uri)
         db = conn[db_name]
+        db.tracking.delete_many({})
 
         # Test empty data and log recording
         result = load_data(False, conn, db)
         assert result == {"etl_message": "No data to load yet."}
+        # Verify log record
         with open("etl.log", "r") as f:
             check = f.read().split("\n")
         assert "[oneline.py] [load_data()] [No data to load]" in check[-1]
-
-        # Write record to db condition check
+        
+        # Write record to db
         query = {
             "bkgNo": "OSAB76633400", "user": None, "line": "ONE", "refId": "1"
         }
@@ -221,17 +233,56 @@ def test_load_data(app):
         data = transform_data(raw)
         assert db.tracking.count_documents({}) == 0
         result = load_data(data, conn, db)
-        assert result == {
-            "etl_message": "New record successfully added"
-            }
+        assert result == {"etl_message": "New record successfully added"}
         assert db.tracking.count_documents({}) == 1
+        # Keep record in database for next test ->
+        
+        # Base Exception condition check
+        db.tracking.create_index(
+            [("bkgNo", ASCENDING)], name="test", unique=True
+        )
+        result = load_data(data, conn, db)
+        assert result == {"etl_message": "Unexpected error"}
+        # Verify log record
+        with open("etl.log", "r") as f:
+            check = f.read().split("\n")
+        assert "[oneline.py] [transform_data()]" in check[-1]
+        assert "E11000 duplicate key error collection:" in check[-1]
+        db.tracking.drop_index("test")
         db.tracking.delete_many({})
 
-        # Cursor.acknowledged == False condition check
-
         # Connection failure condition check
+        #bad_conn = MongoClient(uri.replace("27017", "27016"))
+        #result = load_data(data, bad_conn, db)
+        #assert result == {"etl_message": "Database connection failure"}
+        # Verify log record
+        #with open("etl.log", "r") as f:
+        #    check = f.read().split("\n")
+        #assert "[oneline.py] [transform_data()]"\
+        #    + f" [Connection failure for {query['bkgNo']}]" in check[-1]
+        
+        # Cursor.acknowledged == False condition
+        # Not covered
 
-        # Base Exception condition check
+        # Clean database and close db connection
+        db.tracking.delete_many({})
+        conn.close()
 
-        # Close db connection
+def test_etl_one(app):
+    """Test etl_one() function."""
+    with app.app_context():
+        # Prepare variables and database
+        uri = app.config["DB_FRONTEND_URI"]
+        db_name = app.config["DB_NAME"]
+        conn = MongoClient(uri)
+        db = conn[db_name]
+        db.tracking.delete_many({})
+        query = {
+            "bkgNo": "OSAB76633400", "user": None, "line": "ONE", "refId": "1"
+        }
+        result = etl_one(query, conn, db)
+        assert result == {"etl_message": "New record successfully added"}
+
+        # Clean database and close db connection
+        db.tracking.delete_many({})
         conn.close()
