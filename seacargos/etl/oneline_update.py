@@ -47,11 +47,12 @@ def records_to_update(conn, db, user=None, bkg_number=None):
         if len(records) > 0:
             return records
         else:
-            # Write log
+            log("[oneline_update.py] [records_to_update()] "\
+                + f"[Nothing to update for query {query}]")
             return False
     except ConnectionFailure:
         log("[oneline_update.py] [records_to_update()] "\
-            + f"[DB Connection failure]")
+            + "[DB Connection failure]")
         return False
     except BaseException as err:
         log("[oneline_update.py] [records_to_update()] "\
