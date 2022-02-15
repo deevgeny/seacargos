@@ -6,7 +6,8 @@ import time
 import requests
 from pymongo.mongo_client import MongoClient
 from pymongo import ASCENDING
-from seacargos.etl.oneline import container_request_payload, extract_schedule_data
+from seacargos.etl.oneline import container_request_payload
+from seacargos.etl.oneline import extract_schedule_data
 from seacargos.etl.oneline import extract_container_data
 from seacargos.etl.oneline import schedule_request_payload
 from seacargos.etl.oneline import extract_data
