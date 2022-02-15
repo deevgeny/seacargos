@@ -96,7 +96,7 @@ def transform(records):
         if len(string) == 16:
             return datetime.strptime(string, "%Y-%m-%d %H:%M")
         else:
-            return string + "wrong date string"
+            return datetime.fromtimestamp(0)
     
     # Check schedule keys and extract schedule data
     schedule_keys = ["no", "statusNm", "placeNm", "yardNm",
