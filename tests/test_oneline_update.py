@@ -9,6 +9,8 @@ from datetime import timedelta
 from seacargos.etl.oneline_update import log
 from seacargos.etl.oneline_update import records_to_update
 from seacargos.etl.oneline_update import extract_schedule_details
+from seacargos.etl.oneline_update import str_to_date
+from seacargos.etl.oneline_update import transform
 
 def test_log():
     """Test log() function."""
@@ -127,11 +129,11 @@ def test_records_to_update(app):
 
 def test_extract_schedule_details():
     """Test extract_schedule_details() function."""
-    # Pass to function False argument
+    # Pass False argument to the function
     result = extract_schedule_details(False)
     assert result == False
 
-    # Pass to function list of records
+    # Pass list of records to the function
     records = [
         {"bkgNo": "OSAB76633400", "copNo": "COSA1C20995300"},
         {"bkgNo": "OSAB76636700", "copNo": "COSA1C20995104"}
@@ -142,7 +144,7 @@ def test_extract_schedule_details():
     assert "schedule" in result[1]
     assert "hashColumns" not in result[0]["schedule"][0]
 
-    # Pass to function list of incorrect records
+    # Pass list of incorrect records to the function
     records = [
         {"bkgNo": "OSAB7663340", "copNo": "COSA1C2099530"},
         {"bkgNo": "OSAB7663670", "copNo": "COSA1C2099510"}
@@ -159,3 +161,23 @@ def test_extract_schedule_details():
                 + f" [No schedule for {records[0]['bkgNo']}]" in check[-2]
     assert "[oneline_update.py] [extract_schedule_details()]"\
                 + f" [No schedule for {records[1]['bkgNo']}]" in check[-1]
+
+def test_str_to_date():
+    """Test str_to_date() function."""
+    # Check short string
+    result = str_to_date("")
+    assert result.year == 1970
+
+    # Check correct string
+    result = str_to_date("2022-12-01 10:09")
+    assert result.year == 2022
+    assert result.month == 12
+    assert result.day == 1 
+    assert result.hour == 10
+    assert result.minute == 9
+
+def test_transform():
+    """Test transform() function."""
+    # Pass False argument to the function
+    result = transform(False)
+    assert result == False

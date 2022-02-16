@@ -85,18 +85,25 @@ def extract_schedule_details(records):
             rec["schedule"] = None
     return records
 
+def str_to_date(string):
+        """Convert string to date."""
+        if len(string) == 16:
+            return datetime.strptime(string, "%Y-%m-%d %H:%M")
+        else:
+            return datetime.fromtimestamp(0)
+
 def transform(records):
     """Transforms raw data."""
     # Check input
     if not records:
         return False
     
-    def str_to_date(string):
-        """Convert string to date."""
-        if len(string) == 16:
-            return datetime.strptime(string, "%Y-%m-%d %H:%M")
-        else:
-            return datetime.fromtimestamp(0)
+    #def str_to_date(string):
+    #    """Convert string to date."""
+    #    if len(string) == 16:
+    #        return datetime.strptime(string, "%Y-%m-%d %H:%M")
+    #    else:
+    #        return datetime.fromtimestamp(0)
     
     # Check schedule keys and extract schedule data
     schedule_keys = ["no", "statusNm", "placeNm", "yardNm",
