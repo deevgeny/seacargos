@@ -77,8 +77,7 @@ def extract_schedule_details(records):
         # Get schedule, clean and add to record
         if "list" in data:
             schedule_details = data["list"]
-            if "hashColumns" in schedule_details[0]:
-                del schedule_details[0]["hashColumns"]
+            schedule_details[0].pop("hashColumns", None)
             rec["schedule"] = schedule_details
         else:
             log("[oneline_update.py] [extract_schedule_details()]"\

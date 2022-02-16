@@ -8,6 +8,7 @@ from datetime import timedelta
 
 from seacargos.etl.oneline_update import log
 from seacargos.etl.oneline_update import records_to_update
+from seacargos.etl.oneline_update import extract_schedule_details
 
 def test_log():
     """Test log() function."""
@@ -123,3 +124,38 @@ def test_records_to_update(app):
         # Close connection and clean database
         db.tracking.delete_many({})
         conn.close()
+
+def test_extract_schedule_details():
+    """Test extract_schedule_details() function."""
+    # Pass to function False argument
+    result = extract_schedule_details(False)
+    assert result == False
+
+    # Pass to function list of records
+    records = [
+        {"bkgNo": "OSAB76633400", "copNo": "COSA1C20995300"},
+        {"bkgNo": "OSAB76636700", "copNo": "COSA1C20995104"}
+    ]
+    result = extract_schedule_details(records)
+    assert len(result) == 2
+    assert "schedule" in result[0]
+    assert "schedule" in result[1]
+    assert "hashColumns" not in result[0]["schedule"][0]
+
+    # Pass to function list of incorrect records
+    records = [
+        {"bkgNo": "OSAB7663340", "copNo": "COSA1C2099530"},
+        {"bkgNo": "OSAB7663670", "copNo": "COSA1C2099510"}
+    ]
+    result = extract_schedule_details(records)
+    assert len(result) == 2
+    assert "schedule" in result[0]
+    assert "schedule" in result[1]
+    assert result[0]["schedule"] == None
+    assert result[1]["schedule"] == None
+    with open("etl.log", "r") as f:
+        check = f.read().split("\n")
+    assert "[oneline_update.py] [extract_schedule_details()]"\
+                + f" [No schedule for {records[0]['bkgNo']}]" in check[-2]
+    assert "[oneline_update.py] [extract_schedule_details()]"\
+                + f" [No schedule for {records[1]['bkgNo']}]" in check[-1]
