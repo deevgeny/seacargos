@@ -178,6 +178,35 @@ def test_str_to_date():
 
 def test_transform():
     """Test transform() function."""
+    # Prepare test data
+    records = [
+        {"bkgNo": "OSAB76633400", "copNo": "COSA1C20995300"},
+    ]
+
     # Pass False argument to the function
     result = transform(False)
     assert result == False
+
+    # Pass raw data with correct keys to the function
+    raw = extract_schedule_details(records)
+    result = transform(raw)
+    keys = [
+        "no", "event", "placeName", "yardName", "eventDate", "status",
+        "vesselName", "imo"]
+    assert set(keys).difference(set(result[0]["schedule"][0])) == set()
+    terminals = [
+        "departureDate", "outboundTerminal", "arrivalDate", "inboundTerminal"
+        ]
+    assert set(terminals).issubset(set(result[0]))
+    # Check datatypes
+    # Check actual data vs raw data for one schedule record item
+
+    # Pass raw data with missing keys to the function
+    raw = extract_schedule_details(records)
+    raw[0]["schedule"][0].pop("no")
+    result = transform(raw)
+    assert result[0]["schedule"] == None
+    with open("etl.log", "r") as f:
+        check = f.read().split("\n")
+    assert "[oneline_update.py] [transform()] [Keys do not match"\
+                + f" in schedule data {records[0]['bkgNo']}]" in check[-1]
