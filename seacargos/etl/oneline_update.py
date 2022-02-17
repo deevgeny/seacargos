@@ -98,13 +98,6 @@ def transform(records):
     if not records:
         return False
     
-    #def str_to_date(string):
-    #    """Convert string to date."""
-    #    if len(string) == 16:
-    #        return datetime.strptime(string, "%Y-%m-%d %H:%M")
-    #    else:
-    #        return datetime.fromtimestamp(0)
-    
     # Check schedule keys and extract schedule data
     schedule_keys = ["no", "statusNm", "placeNm", "yardNm",
                      "eventDt", "actTpCd", "actTpCd", "vslEngNm",

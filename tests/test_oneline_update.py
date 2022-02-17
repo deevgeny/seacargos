@@ -11,6 +11,7 @@ from seacargos.etl.oneline_update import records_to_update
 from seacargos.etl.oneline_update import extract_schedule_details
 from seacargos.etl.oneline_update import str_to_date
 from seacargos.etl.oneline_update import transform
+from seacargos.etl.oneline_update import update
 
 def test_log():
     """Test log() function."""
@@ -141,7 +142,11 @@ def test_extract_schedule_details():
     result = extract_schedule_details(records)
     assert len(result) == 2
     assert "schedule" in result[0]
+    assert "bkgNo" in result[0]
+    assert "copNo" in result[0]
     assert "schedule" in result[1]
+    assert "bkgNo" in result[1]
+    assert "copNo" in result[1]
     assert "hashColumns" not in result[0]["schedule"][0]
 
     # Pass list of incorrect records to the function
@@ -198,8 +203,33 @@ def test_transform():
         "departureDate", "outboundTerminal", "arrivalDate", "inboundTerminal"
         ]
     assert set(terminals).issubset(set(result[0]))
+
     # Check datatypes
+    assert isinstance(result[0]["departureDate"], datetime)
+    assert isinstance(result[0]["outboundTerminal"], str)
+    assert isinstance(result[0]["arrivalDate"], datetime)
+    assert isinstance(result[0]["inboundTerminal"], str)
+    assert isinstance(result[0]["schedule"][0]["no"], int)
+    assert isinstance(result[0]["schedule"][0]["event"], str)
+    assert isinstance(result[0]["schedule"][0]["placeName"], str)
+    assert isinstance(result[0]["schedule"][0]["yardName"], str)
+    assert isinstance(result[0]["schedule"][0]["eventDate"], datetime)
+    assert isinstance(result[0]["schedule"][0]["status"], str)
+    assert isinstance(result[0]["schedule"][0]["vesselName"], str)
+    assert isinstance(result[0]["schedule"][0]["imo"], str)
+
     # Check actual data vs raw data for one schedule record item
+    raw = extract_schedule_details(records)
+    check = raw[0]["schedule"][0]
+    result = transform(raw)
+    assert result[0]["schedule"][0]["no"] == int(check["no"])
+    assert result[0]["schedule"][0]["event"] == check["statusNm"]
+    assert result[0]["schedule"][0]["placeName"] == check["placeNm"]
+    assert result[0]["schedule"][0]["yardName"] == check["yardNm"]
+    assert result[0]["schedule"][0]["eventDate"] == str_to_date(check["eventDt"])
+    assert result[0]["schedule"][0]["status"] == check["actTpCd"]
+    assert result[0]["schedule"][0]["vesselName"] == check["vslEngNm"]
+    assert result[0]["schedule"][0]["imo"] == check["lloydNo"]
 
     # Pass raw data with missing keys to the function
     raw = extract_schedule_details(records)
@@ -210,3 +240,63 @@ def test_transform():
         check = f.read().split("\n")
     assert "[oneline_update.py] [transform()] [Keys do not match"\
                 + f" in schedule data {records[0]['bkgNo']}]" in check[-1]
+
+def test_update(app):
+    """Test update() function."""
+    with app.app_context():
+        # Prepare variables and clean database
+        uri = app.config["DB_FRONTEND_URI"]
+        db_name = app.config["DB_NAME"]
+        conn = MongoClient(uri)
+        db = conn[db_name]
+        db.tracking.delete_many({})   
+
+        # Pass False argument to the function
+        result = update(conn, db, False)
+        assert result == False
+
+        # Run with regular_update=True condition
+        db_record = {
+            "bkgNo": "OSAB76633400",
+            "copNo": "COSA1C20995300",
+            "trackEnd": None,
+            "schedule": None,
+            "user": "test",
+            "departureDate": None,
+            "outboundTerminal": None,
+            "arrivalDate": None,
+            "inboundTerminal": None,
+        }
+        db.tracking.insert_one(db_record)
+        records = [
+            {"bkgNo": "OSAB76633400",
+            "copNo": "COSA1C20995300",
+            "user": "test"},
+        ]
+        raw = extract_schedule_details(records)
+        result = transform(raw)
+        update(conn, db, result)
+        check = db.tracking.find_one({})
+        assert check["user"] == result[0]["user"]
+        assert check["schedule"] == result[0]["schedule"]
+        assert check["departureDate"] == result[0]["departureDate"]
+        assert check["outboundTerminal"] == result[0]["outboundTerminal"]
+        assert check["arrivalDate"] == result[0]["arrivalDate"]
+        assert check["inboundTerminal"] == result[0]["inboundTerminal"]
+        assert "recordUpdate" in check
+        assert "regularUpdate" in check
+        assert isinstance(check["recordUpdate"], datetime)
+        assert isinstance(check["regularUpdate"], datetime)
+        assert check["recordUpdate"] == check["regularUpdate"]
+        db.tracking.delete_many({})
+
+        # Run with reqular_update=False condition
+        # Test code here...
+
+        # Run with record["schedule"]=None condition (error log write check)
+        # Test code here...
+
+        # Clean database and close connection
+        db.tracking.delete_many({})
+        conn.close()
+        
