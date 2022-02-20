@@ -295,7 +295,7 @@ if __name__ == "__main__":
         else:
             # Add log
             sys.exit()
-    else:
+    elif env == "production":
         if os.path.exists(prod_path):
             conn, db = conn_db(prod_path, env)
         else:
