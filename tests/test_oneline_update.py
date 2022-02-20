@@ -16,6 +16,7 @@ from seacargos.etl.oneline_update import arrived
 from seacargos.etl.oneline_update import track_end
 from seacargos.etl.oneline_update import conn_db
 from seacargos.etl.oneline_update import regular_schedule_update
+from seacargos.etl.oneline_update import user_schedule_update
 
 def test_log():
     """Test log() function."""
@@ -573,5 +574,29 @@ def test_regular_schedule_update(app):
             check = f.read().split("\n")
         assert "[oneline_update.py] [records_to_update()] "\
             + "[Nothing to update for query" in check[-1]
-            
 
+        # Delete db object and close db connection
+        del db 
+        conn.close()
+            
+def test_user_schedule_update(app):
+    """Test user_schedule_update() function."""
+    with app.app_context():
+        # Prepare variables and clean database
+        uri = app.config["DB_FRONTEND_URI"]
+        db_name = app.config["DB_NAME"]
+        conn = MongoClient(uri)
+        db = conn[db_name]
+        db.tracking.delete_many({})
+
+        # Run user schedule update
+        user_schedule_update(conn, db, user="test")
+        with open("etl.log", "r") as f:
+            check = f.read().split("\n")
+        assert "[oneline_update.py] [records_to_update()] "\
+            + "[Nothing to update for query "\
+            + "{'trackEnd': None, 'user': 'test'}]" in check[-1]
+
+        # Delete db object and close db connection
+        del db 
+        conn.close()
