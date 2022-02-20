@@ -453,12 +453,34 @@ def test_arrived(app):
 
         # Test 0 containers arrived
         test_record = {
-            "user": "test", "trackEnd": None,
+            "user": "test", "trackEnd": None, "bkgNo": "1",
             "schedule": [{"no": 1, "status": "A"}, {"no": 2, "status": "E"}]
         }
         db.tracking.insert_one(test_record)
         result = arrived(conn, db)
         assert result == False
         result = arrived(conn, db, user="test")
+        assert result == False
+        db.tracking.delete_many({})
+
+        # Test 2 containers arrived
+        test_records = [
+            {"user": "test", "trackEnd": None, "bkgNo": "1",
+            "schedule": [{"no": 1, "status": "A"}, {"no": 2, "status": "A"}]},
+            {"user": "test", "trackEnd": None, "bkgNo": "2",
+            "schedule": [
+                {"no": 1, "status": "A"},
+                {"no": 2, "status": "A"},
+                {"no": 3, "status": "A"}]}
+        ]
+        db.tracking.insert_many(test_records)
+        result = arrived(conn, db)
+        assert len(result) == 2
+        assert result == [{"bkgNo": "1"}, {"bkgNo": "2"}]
+        result = arrived(conn, db, user="test")
+        assert len(result) == 2
+        assert result == [{"bkgNo": "1"}, {"bkgNo": "2"}]
+        # Test query with wrong user name
+        result = arrived(conn, db, user="x")
         assert result == False
         db.tracking.delete_many({})
