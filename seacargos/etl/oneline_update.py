@@ -207,11 +207,11 @@ def arrived(conn, db, user=None):
             return False
     except ConnectionFailure:
         log("[oneline_update.py] [arrived()] "\
-            + f"[DB Connection failure]")
+            + f"[DB connection failure]")
         return False
     except BaseException as err:
         log("[oneline_update.py] [arrived()] "\
-            + f"[{err.details}]")
+            + f"[{err}]")
         return False
     
 def track_end(conn, db, records):

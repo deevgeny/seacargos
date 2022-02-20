@@ -12,6 +12,7 @@ from seacargos.etl.oneline_update import extract_schedule_details
 from seacargos.etl.oneline_update import str_to_date
 from seacargos.etl.oneline_update import transform
 from seacargos.etl.oneline_update import update
+from seacargos.etl.oneline_update import arrived
 
 def test_log():
     """Test log() function."""
@@ -251,7 +252,7 @@ def test_update(app):
         conn = MongoClient(uri)
         db = conn[db_name]
         db.tracking.delete_many({})   
-
+        
         # Pass False argument to the function
         result = update(conn, db, False)
         assert result == False
@@ -406,7 +407,7 @@ def test_update(app):
         #    + "[DB connection failure]" in check[-1]
         #bad_conn.close()
 
-        # Base exception condition
+        # Test Base exception condition
         bad_uri = uri.replace("<", ">")
         bad_conn = MongoClient(bad_uri)
         result = update(bad_conn, db, result)
@@ -418,4 +419,46 @@ def test_update(app):
         # Clean database and close connection
         db.tracking.delete_many({})
         conn.close()
-        
+
+def test_arrived(app):
+    """Test arrived() function.""" 
+    with app.app_context():
+        # Prepare variables and clean database
+        uri = app.config["DB_FRONTEND_URI"]
+        db_name = app.config["DB_NAME"]
+        conn = MongoClient(uri)
+        db = conn[db_name]
+        db.tracking.delete_many({})
+
+        # Test connection failure condition
+        #bad_uri = uri.replace("27017", "27016")
+        #bad_conn = MongoClient(bad_uri)
+        #result = arrived(bad_conn, db)
+        #assert result == False
+        #with open("etl.log", "r") as f:
+        #    check = f.read().split("\n")
+        #assert "[oneline_update.py] [arrived()] "\
+        #    + "[DB connection failure]" in check[-1]
+        #bad_conn.close()
+
+        # Test Base exception condition
+        bad_uri = uri.replace("<", ">")
+        bad_conn = MongoClient(bad_uri)
+        result = arrived(bad_conn, db)
+        assert result == False
+        with open("etl.log", "r") as f:
+            check = f.read().split("\n")
+        assert "Authentication failed." in check[-1]
+        bad_conn.close()
+
+        # Test 0 containers arrived
+        test_record = {
+            "user": "test", "trackEnd": None,
+            "schedule": [{"no": 1, "status": "A"}, {"no": 2, "status": "E"}]
+        }
+        db.tracking.insert_one(test_record)
+        result = arrived(conn, db)
+        assert result == False
+        result = arrived(conn, db, user="test")
+        assert result == False
+        db.tracking.delete_many({})
