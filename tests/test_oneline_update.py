@@ -13,6 +13,9 @@ from seacargos.etl.oneline_update import str_to_date
 from seacargos.etl.oneline_update import transform
 from seacargos.etl.oneline_update import update
 from seacargos.etl.oneline_update import arrived
+from seacargos.etl.oneline_update import track_end
+from seacargos.etl.oneline_update import conn_db
+from seacargos.etl.oneline_update import regular_schedule_update
 
 def test_log():
     """Test log() function."""
@@ -484,3 +487,91 @@ def test_arrived(app):
         result = arrived(conn, db, user="x")
         assert result == False
         db.tracking.delete_many({})
+
+def test_track_end(app):
+    """Test track_end() function."""
+    with app.app_context():
+        # Prepare variables and clean database
+        uri = app.config["DB_FRONTEND_URI"]
+        db_name = app.config["DB_NAME"]
+        conn = MongoClient(uri)
+        db = conn[db_name]
+        db.tracking.delete_many({})
+
+        # Test records=False argument
+        result = track_end(conn, db, False)
+        assert result == False
+    
+        # Test connection failure condition
+        #bad_uri = uri.replace("27017", "27016")
+        #bad_conn = MongoClient(bad_uri)
+        #result = track_end(bad_conn, db, [{}, {}])
+        #assert result == False
+        #with open("etl.log", "r") as f:
+        #    check = f.read().split("\n")
+        #assert "[oneline_update.py] [track_end()] "\
+        #    + "[DB connection failure]" in check[-1]
+        #bad_conn.close()
+
+        # Test successful track_end for 2 records
+        records = [
+            {"bkgNo": "1", "trackEnd": None}, {"bkgNo": "2", "trackEnd": None}
+        ]
+        db.tracking.insert_many(records)
+        track_end(conn, db, records)
+        check_1 = db.tracking.find_one({"bkgNo": "1"})
+        assert isinstance(check_1["trackEnd"], datetime)
+        check_2 = db.tracking.find_one({"bkgNo": "2"})
+        assert isinstance(check_2["trackEnd"], datetime)
+        db.tracking.delete_many({})
+
+        # Test unseccessful track_end for 1 record
+        db.tracking.insert_one({"bkgNo": "1", "trackEnd": None})
+        track_end(conn, db, [{"bkgNo": "2"}])
+        with open("etl.log", "r") as f:
+            check = f.read().split("\n")
+        assert "[oneline_update.py] [track_end()] "\
+            + "[Failed to set track end for 2 "\
+            + "{'n': 0, 'nModified': 0, 'ok': 1.0, 'updatedExisting': False}]"\
+            in check[-1]
+        db.tracking.delete_many({})
+
+        # Test Base exception condition
+        bad_uri = uri.replace("<", ">")
+        bad_conn = MongoClient(bad_uri)
+        result = track_end(bad_conn, db, [{}, {}])
+        assert result == False
+        with open("etl.log", "r") as f:
+            check = f.read().split("\n")
+        assert "Authentication failed." in check[-1]
+        bad_conn.close()
+
+def test_conn_db():
+    """Test conn_db() function."""
+    # Check test path
+    path = "instance/test_config.json"
+    env = "test"
+    conn, db = conn_db(path, env)
+    assert conn.list_database_names() == ["test"]
+    assert db.name == "test"
+    del db
+    conn.close()
+
+def test_regular_schedule_update(app):
+    """Test regular_schedule_update() funciton."""
+    with app.app_context():
+        # Prepare variables and clean database
+        uri = app.config["DB_FRONTEND_URI"]
+        db_name = app.config["DB_NAME"]
+        conn = MongoClient(uri)
+        db = conn[db_name]
+        db.tracking.delete_many({})
+
+        # Run regular schedule update
+        regular_schedule_update(conn, db)
+        with open("etl.log", "r") as f:
+            check = f.read().split("\n")
+        assert "[oneline_update.py] [records_to_update()] "\
+            + "[Nothing to update for query" in check[-1]
+            
+

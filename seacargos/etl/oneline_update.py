@@ -225,16 +225,20 @@ def track_end(conn, db, records):
         query = {"bkgNo": None, "trackEnd": None}
         for rec in records:
             query["bkgNo"] = rec["bkgNo"]
-            cur = db.tracking.update_one(
+            cursor = db.tracking.update_one(
                 query,
                 {"$set": {"trackEnd": datetime.now().replace(microsecond=0)}},
             )
-            if cur.acknowledged == False:
+            #if cursor.acknowledged == False:
+            #    log("[oneline_update.py] [track_end()] "\
+            #        + f"[{rec['bkgNo']} not closed for {rec.get('user', None)}]")
+            if not cursor.raw_result["updatedExisting"]:
                 log("[oneline_update.py] [track_end()] "\
-                    + f"[{rec['bkgNo']} not closed for {rec.get('user', None)}]")
+                    + f"[Failed to set track end for {rec['bkgNo']} "\
+                    + f"{cursor.raw_result}]")
     except ConnectionFailure:
         log("[oneline_update.py] [track_end()] "\
-            + f"[DB Connection failure]")
+            + f"[DB connection failure]")
         return False
     except BaseException as err:
         log("[oneline_update.py] [track_end()] "\
