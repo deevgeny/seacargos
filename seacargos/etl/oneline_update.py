@@ -169,10 +169,11 @@ def update(conn, db, records, regular_update=True):
                 cursor = db.tracking.update_one(query, update)
                 if cursor.acknowledged == False:
                     log("[oneline_update.py] [update()] "\
-                    + f"[{rec['bkgNo']} not updated for {rec.get('user', None)}]")
+                    + f"[{rec['bkgNo']} user: {rec.get('user', None)} "\
+                    + "curosor.acknowledged==False]")
             else:
                 log("[oneline_update.py] [update()] "\
-                + f"[Not updated {rec['bkgNo']}]")
+                + f"[{rec['bkgNo']} not updated in database]")
     except ConnectionFailure:
         log(f"[oneline_update.py] [update()] [Connection failure]")
     except BaseException as err:

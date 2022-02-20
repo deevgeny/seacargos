@@ -266,6 +266,8 @@ def test_update(app):
             "outboundTerminal": None,
             "arrivalDate": None,
             "inboundTerminal": None,
+            "regularUpdate": None,
+            "recordUpdate": None
         }
         db.tracking.insert_one(db_record)
         records = [
@@ -283,18 +285,97 @@ def test_update(app):
         assert check["outboundTerminal"] == result[0]["outboundTerminal"]
         assert check["arrivalDate"] == result[0]["arrivalDate"]
         assert check["inboundTerminal"] == result[0]["inboundTerminal"]
-        assert "recordUpdate" in check
-        assert "regularUpdate" in check
         assert isinstance(check["recordUpdate"], datetime)
         assert isinstance(check["regularUpdate"], datetime)
         assert check["recordUpdate"] == check["regularUpdate"]
         db.tracking.delete_many({})
 
         # Run with reqular_update=False condition
-        # Test code here...
-
+        db.tracking.insert_one(db_record)
+        records = [
+            {"bkgNo": "OSAB76633400",
+            "copNo": "COSA1C20995300",
+            "user": "test"},
+        ]
+        raw = extract_schedule_details(records)
+        result = transform(raw)
+        update(conn, db, result, regular_update=False)
+        check = db.tracking.find_one({})
+        assert check["user"] == result[0]["user"]
+        assert check["schedule"] == result[0]["schedule"]
+        assert check["departureDate"] == result[0]["departureDate"]
+        assert check["outboundTerminal"] == result[0]["outboundTerminal"]
+        assert check["arrivalDate"] == result[0]["arrivalDate"]
+        assert check["inboundTerminal"] == result[0]["inboundTerminal"]
+        assert isinstance(check["recordUpdate"], datetime)
+        assert not isinstance(check["regularUpdate"], datetime)
+        db.tracking.delete_many({})
+        
         # Run with record["schedule"]=None condition (error log write check)
-        # Test code here...
+        db.tracking.insert_one(db_record)
+        records = [
+            {"bkgNo": "OSAB76633400",
+            "copNo": "COSA1C20995300",
+            "user": "test"},
+        ]
+        raw = extract_schedule_details(records)
+        result = transform(raw)
+        result[0]["schedule"] = None
+        update(conn, db, result)
+        check = db.tracking.count_documents({})
+        with open("etl.log", "r") as f:
+            check = f.read().split("\n")
+        assert "[oneline_update.py] [update()] "\
+            + f"[{result[0]['bkgNo']} not updated in database]" in check[-1]
+        db.tracking.delete_many({})
+        
+        # Test db query user validation & update condition
+        db.tracking.insert_one(db_record)
+        records = [
+            {"bkgNo": "OSAB76633400",
+            "copNo": "COSA1C20995300",
+            "user": "test"},
+        ]
+        raw = extract_schedule_details(records)
+        result = transform(raw)
+        result[0].pop("user") # Remove user to check
+        result[0]["departureDate"] = "new data"
+        result[0]["outboundTerminal"] = "new data"
+        result[0]["arrivalDate"] = "new data"
+        result[0]["inboundTerminal"] = "new data"
+        update(conn, db, result)
+        check = db.tracking.find_one({})
+        assert check["schedule"] == result[0]["schedule"]
+        assert check["departureDate"] == result[0]["departureDate"]
+        assert check["outboundTerminal"] == result[0]["outboundTerminal"]
+        assert check["arrivalDate"] == result[0]["arrivalDate"]
+        assert check["inboundTerminal"] == result[0]["inboundTerminal"]
+        assert isinstance(check["recordUpdate"], datetime)
+        assert isinstance(check["regularUpdate"], datetime)
+        db.tracking.delete_many({})
+
+        # Test update["$set"] modification by func
+        db.tracking.insert_one(db_record)
+        records = [
+            {"bkgNo": "OSAB76633400",
+            "copNo": "COSA1C20995300",
+            "user": "test"},
+        ]
+        raw = extract_schedule_details(records)
+        result = transform(raw)
+        result[0].pop("departureDate")
+        result[0].pop("outboundTerminal")
+        result[0].pop("arrivalDate")
+        result[0].pop("inboundTerminal")
+        update(conn, db, result)
+        check = db.tracking.find_one({})
+        assert check["departureDate"] == None
+        assert check["outboundTerminal"] == None
+        assert check["arrivalDate"] == None
+        assert check["inboundTerminal"] == None
+        assert isinstance(check["recordUpdate"], datetime)
+        assert isinstance(check["regularUpdate"], datetime)
+        db.tracking.delete_many({})
 
         # Clean database and close connection
         db.tracking.delete_many({})
