@@ -38,7 +38,7 @@ def test_records_to_update(app):
         db = conn[db_name]
         db.tracking.delete_many({})
 
-        # Connection failure condition
+        # Test connection failure condition
         #bad_uri = uri.replace("27017", "27016")
         #bad_conn = MongoClient(bad_uri)
         #result = records_to_update(bad_conn, db)
@@ -46,7 +46,8 @@ def test_records_to_update(app):
         #with open("etl.log", "r") as f:
         #    check = f.read().split("\n")
         #assert "[oneline_update.py] [records_to_update()] "\
-        #    + "[DB Connection failure]" in check[-1]
+        #    + "[DB connection failure]" in check[-1]
+        # bad_conn.close()
 
         # Base exception condition
         bad_uri = uri.replace("<", ">")
@@ -325,8 +326,8 @@ def test_update(app):
         check = db.tracking.count_documents({})
         with open("etl.log", "r") as f:
             check = f.read().split("\n")
-        assert "[oneline_update.py] [update()] "\
-            + f"[{result[0]['bkgNo']} not updated in database]" in check[-1]
+        assert f"[oneline_update.py] [update()] [{result[0]['bkgNo']} "\
+            + "missing schedule data, not updated]" in check[-1]
         db.tracking.delete_many({})
         
         # Test db query user validation & update condition
@@ -338,7 +339,7 @@ def test_update(app):
         ]
         raw = extract_schedule_details(records)
         result = transform(raw)
-        result[0].pop("user") # Remove user to check
+        result[0].pop("user") # Remove user from update data
         result[0]["departureDate"] = "new data"
         result[0]["outboundTerminal"] = "new data"
         result[0]["arrivalDate"] = "new data"
@@ -376,6 +377,43 @@ def test_update(app):
         assert isinstance(check["recordUpdate"], datetime)
         assert isinstance(check["regularUpdate"], datetime)
         db.tracking.delete_many({})
+
+        # Test {'updatedExisting': False} in cur.raw_result
+        db.tracking.insert_one(db_record)
+        records = [
+            {"bkgNo": "OSAB76633400",
+            "copNo": "COSA1C20995300",
+            "user": "test"},
+        ]
+        raw = extract_schedule_details(records)
+        result = transform(raw)
+        result[0]["user"] = None
+        update(conn, db, result)
+        with open("etl.log", "r") as f:
+            check = f.read().split("\n")
+        assert "[oneline_update.py] [update()] "\
+                    + f"[{result[0]['bkgNo']} user: {result[0]['user']} "\
+                    + "{'n': 0, 'nModified': 0, 'ok': 1.0, "\
+                    + "'updatedExisting': False}]" in check[-1]
+        
+        # Test connection failure condition
+        #bad_uri = uri.replace("27017", "27016")
+        #bad_conn = MongoClient(bad_uri)
+        #result = update(bad_conn, db, result)
+        #with open("etl.log", "r") as f:
+        #    check = f.read().split("\n")
+        #assert "[oneline_update.py] [update()] "\
+        #    + "[DB connection failure]" in check[-1]
+        #bad_conn.close()
+
+        # Base exception condition
+        bad_uri = uri.replace("<", ">")
+        bad_conn = MongoClient(bad_uri)
+        result = update(bad_conn, db, result)
+        with open("etl.log", "r") as f:
+            check = f.read().split("\n")
+        assert "Authentication failed." in check[-1]
+        bad_conn.close()
 
         # Clean database and close connection
         db.tracking.delete_many({})

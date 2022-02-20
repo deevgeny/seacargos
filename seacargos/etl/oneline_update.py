@@ -52,7 +52,7 @@ def records_to_update(conn, db, user=None, bkg_number=None):
             return False
     except ConnectionFailure:
         log("[oneline_update.py] [records_to_update()] "\
-            + "[DB Connection failure]")
+            + "[DB connection failure]")
         return False
     except BaseException as err:
         log("[oneline_update.py] [records_to_update()] "\
@@ -167,15 +167,20 @@ def update(conn, db, records, regular_update=True):
                 if "inboundTerminal" in rec:
                     update["$set"]["inboundTerminal"] = rec["inboundTerminal"]
                 cursor = db.tracking.update_one(query, update)
-                if cursor.acknowledged == False:
+                #if cursor.acknowledged == False:
+                #    log("[oneline_update.py] [update()] "\
+                #    + f"[{rec['bkgNo']} user: {rec.get('user', None)} "\
+                #    + "curosor.acknowledged==False]")
+                if not cursor.raw_result["updatedExisting"]:
                     log("[oneline_update.py] [update()] "\
                     + f"[{rec['bkgNo']} user: {rec.get('user', None)} "\
-                    + "curosor.acknowledged==False]")
+                    + f"{cursor.raw_result}]")
+
             else:
                 log("[oneline_update.py] [update()] "\
-                + f"[{rec['bkgNo']} not updated in database]")
+                + f"[{rec['bkgNo']} missing schedule data, not updated]")
     except ConnectionFailure:
-        log(f"[oneline_update.py] [update()] [Connection failure]")
+        log(f"[oneline_update.py] [update()] [DB connection failure]")
     except BaseException as err:
         log(f"[oneline_update.py] [update()] [{err}]")
 
