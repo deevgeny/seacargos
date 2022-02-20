@@ -2,13 +2,15 @@
 Sea cargos aggregator web application.
 
 ## Who can use it
-Any person or any company who have a need to track sea shipments.
+Anyone who have a need to track sea shipments.
 
 ## How it works
-Coming soon...
+Python ETL scripts get/update data from web sites and store them in MongoDB database.
+Python ETL scripts can be run by user and/or scheduled with Linux crontab tool.
+Flask framework provides user interface to get, update and view tracking data stored in database.
 
 ## How to install
-Coming soon...
+Will be updated soon...
 
 ## How to config
-Coming soon...
+Will be updated soon...
