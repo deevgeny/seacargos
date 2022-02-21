@@ -90,13 +90,13 @@ body {
 /* Dashboard classes */
 .tracking-form-container {
     border: 1px solid black;
-    min-height: 130px;
+    min-height: 158px;
     min-width: 300px;
 }
 
 .tracking-summary-container {
     border: 1px solid black;
-    min-height: 130px;
+    min-height: 158px;
     min-width: 300px;
 }
     .tracking-summary-container .record {
@@ -114,7 +114,7 @@ body {
 
 .location-summary-container {
     border: 1px solid black;
-    min-height: 130px;
+    min-height: 158px;
     min-width: 300px;
 }
 
@@ -163,7 +163,8 @@ form.login-form {
         max-width: 100px;
     }
 
-form.tracking-form {
+/*Tracking form element styles*/
+form.tracking {
     display: grid;
     grid-template-columns: [labels] auto [fields] auto;
     grid-auto-flow: row dense;
@@ -171,18 +172,26 @@ form.tracking-form {
     /*margin-top: 50px;*/
     place-self: center center;
 }
-    form.tracking-form > label {
+    form.tracking > label {
         grid-column: labels;
         grid-row: auto;
         place-self: center left;
         font-size: 14px;
         margin: 5px 0 5px 10px;
     }
-    form.tracking-form > input {
+    form.tracking > input {
         grid-column: fields;
         grid-row: auto;
         place-self: center right;
-        max-width: 100px;
+        max-width: 105px;
         margin: 5px 10px 5px 0;
+        font-size: 12px;
     }
-
+    input.date {
+        grid-column: fields;
+        grid-row: auto;
+        place-self: center right;
+        width: 105px;
+        margin: 5px 10px 5px 0;
+        font-size: 12px;
+    }
