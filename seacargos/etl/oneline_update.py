@@ -285,20 +285,12 @@ def record_schedule_update(conn, db, user, bkg_number):
     update(conn, db, transformed_data, regular_update=False)
 
 if __name__ == "__main__":
-    """Main function."""
-    env = os.environ.get("FLASK_ENV", "Not set")
-    dev_path = "../../instance/dev_config.json"
+    """ETL oneline update script."""
+    #env = os.environ.get("FLASK_ENV", "Not set")
+    env = "production"
     prod_path = "../../instance/prod_config.json"
-    if env == "development":
-        if os.path.exists(dev_path):
-            conn, db = conn_db(dev_path, env)
-        else:
-            # Add log
-            sys.exit()
-    elif env == "production":
-        if os.path.exists(prod_path):
-            conn, db = conn_db(prod_path, env)
-        else:
-            # Add log
-            sys.exit()
-    sys.exit(regular_schedule_update(conn, db))
+    if os.path.exists(prod_path):
+        conn, db = conn_db(prod_path, env)
+        sys.exit(regular_schedule_update(conn, db))
+    else:
+        sys.exit()
