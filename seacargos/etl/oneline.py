@@ -107,6 +107,13 @@ def transform_data(data):
     # Check contnainer keys and extract container info
     cntr_keys = ["cntrNo", "cntrTpszNm", "copNo", "blNo"]
     if set(cntr_keys).issubset(set(data["container_data"])):
+        # Prepare requested ETA field
+        if len(data["query"]["requestedETA"]) > 1:
+            data["query"]["requestedETA"] =\
+                datetime.strptime(
+                data["query"]["requestedETA"], "%Y-%m-%d"
+                )
+        # Prepare timestamp
         timestamp = datetime.now().replace(microsecond=0)
         result = {
             "cntrNo": data["container_data"]["cntrNo"],
@@ -116,9 +123,7 @@ def transform_data(data):
             "blNo": data["container_data"]["blNo"],
             "user": data["query"]["user"], "line": data["query"]["line"],
             "refId": data["query"]["refId"],
-            "requestedETA": datetime.strptime(
-                data["query"]["requestedETA"], "%Y-%m-%d"
-                ),
+            "requestedETA": data["query"]["requestedETA"],
             "trackStart": timestamp,
             "regularUpdate": timestamp,
             "recordUpdate": timestamp,

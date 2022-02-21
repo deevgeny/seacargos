@@ -57,26 +57,36 @@ def test_dashboard_input_form(client, app):
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
         login(client, user, pwd)
-        # Add new record with empty refId
+        # Add new record with empty refId and requestedETA fields
         response = client.post(
-            "/dashboard", data={"booking": BKG_NO_1, "refId": ""},
+            "/dashboard",
+            data={"booking": BKG_NO_1, "refId": "", "requestedETA": ""},
             follow_redirects=True)
         assert b"New record successfully added" in response.data
         rec = db.tracking.find_one({"bkgNo": BKG_NO_1})
         assert rec["refId"] == "-"
+        assert rec["requestedETA"] == "-"
         db.tracking.delete_many({})
         
-        # Add new record with non empty refId
+        # Add new record with non empty refId and requestedETA fields
         response = client.post(
-            "/dashboard", data={"booking": BKG_NO_1, "refId": "id"},
+            "/dashboard",
+            data={
+                "booking": BKG_NO_1,
+                "refId": "id", "requestedETA": "2020-05-01"
+                },
             follow_redirects=True)
         assert b"New record successfully added" in response.data
         rec = db.tracking.find_one({"bkgNo": BKG_NO_1})
         assert rec["refId"] == "id"
+        assert rec["requestedETA"] == datetime(2020, 5, 1)
 
         # Try to add duplicated record 
         response = client.post(
-            "/dashboard", data={"booking": BKG_NO_1, "refId": "id"},
+            "/dashboard", data={
+                "booking": BKG_NO_1,
+                "refId": "id", "requestedETA": "2020-05-01"
+                },
             follow_redirects=True)
         assert b"Item OSAB67971900 already exists in tracking database." in \
             response.data
@@ -105,7 +115,8 @@ def test_details(client, app):
         conn = db_conn()
         db = conn[g.db_name]
         query = {"bkgNo": BKG_NO_1, "line": "ONE",
-                 "user": g.user["name"], "trackEnd": None, "refId": "-"} 
+                 "user": g.user["name"], "trackEnd": None, "refId": "-",
+                 "requestedETA": "-"} 
         etl_one(query, conn, db)
         response = client.get(f"/dashboard/{BKG_NO_1}")
         assert response.status_code == 200
@@ -123,7 +134,8 @@ def test_update(app, client):
         login(client, user, pwd)
         # Prepare booking number 1 test data
         client.post(
-            "/dashboard", data={"booking": BKG_NO_1, "refId": ""},
+            "/dashboard",
+            data={"booking": BKG_NO_1, "refId": "", "requestedETA": ""},
             follow_redirects=True)
         rec = db.tracking.find_one({"bkgNo": BKG_NO_1})
         bkg_no_1 = {
@@ -132,7 +144,8 @@ def test_update(app, client):
         }
         # Prepare booking number 2 test data
         client.post(
-            "/dashboard", data={"booking": BKG_NO_2, "refId": ""},
+            "/dashboard",
+            data={"booking": BKG_NO_2, "refId": "", "requestedETA": ""},
             follow_redirects=True)
         rec = db.tracking.find_one({"bkgNo": BKG_NO_1})
         bkg_no_2 = {
@@ -162,7 +175,8 @@ def test_update_record(app, client):
         login(client, user, pwd)
         # Load record to db
         client.post(
-            "/dashboard", data={"booking": BKG_NO_1, "refId": ""},
+            "/dashboard",
+            data={"booking": BKG_NO_1, "refId": "", "requestedETA": ""},
             follow_redirects=True)
         # Update record
         client.get(f"/dashboard/update/{BKG_NO_1}", follow_redirects=True)
@@ -351,7 +365,7 @@ def test_schedule_table_data():
             'departureDate': datetime(2021, 12, 1, 7, 42),
             'inboundTerminal': 'ST PETERSBURG, RUSSIAN FEDERATION|JSC',
             'arrivalDate': datetime(2021, 12, 10, 10, 0), 'vesselName': None,
-            'location': None}]
+            'location': None, 'requestedETA': '-'}]
     table = {"table": [
         {"booking": "OSAB67971900", "refId": "-", "container": "SZLU3605702",
          "type": "20'REEFER", 
@@ -360,7 +374,7 @@ def test_schedule_table_data():
          "to": {"location": "ST PETERSBURG, RUSSIAN FEDERATION",
                 "terminal": "JSC"},
          "arrival": "10-12-2021 10:00",
-         "totalDays": 9}
+         "totalDays": 9, "requestedETA": "-", "etaDelay": "-"}
         ]}
     assert schedule_table_data(records) == table
 
@@ -398,7 +412,8 @@ def test_db_get_record(app):
         # Check non empty database condition
         user = app.config["USER_NAME"]
         query = {"bkgNo": BKG_NO_1, "line": "ONE",
-                 "user": user, "trackEnd": None, "refId": "-"} 
+                 "user": user, "trackEnd": None, "refId": "-",
+                 "requestedETA": "-"} 
         etl_one(query, conn, db)
         record =  db_get_record(db, BKG_NO_1, "test")
         assert record != None
@@ -418,7 +433,8 @@ def test_prepare_record_details(app):
         db = conn[g.db_name]
         user = app.config["USER_NAME"]
         query = {"bkgNo": BKG_NO_1, "line": "ONE",
-                 "user": user, "trackEnd": None, "refId": "-"} 
+                 "user": user, "trackEnd": None, "refId": "-",
+                 "requestedETA": "-"} 
         etl_one(query, conn, db)
         record =  db_get_record(db, BKG_NO_1, "test")
         details = prepare_record_details(record)

@@ -163,7 +163,8 @@ def test_transform_data():
 
     # Prepare query
     query = {
-        "bkgNo": "OSAB76633400", "user": None, "line": "ONE", "refId": "1"
+        "bkgNo": "OSAB76633400", "user": None,
+        "line": "ONE", "refId": "1", "requestedETA": "-"
         }
 
     # Check container info keys
@@ -173,7 +174,8 @@ def test_transform_data():
         "cntrNo", "cntrType", "copNo", "bkgNo", "blNo", "user", "refId",
         "trackStart", "regularUpdate", "recordUpdate", "trackEnd",
         "outboundTerminal", "departureDate", "inboundTerminal", "arrivalDate",
-        "vesselName", "location", "schedule", "initSchedule", "line"]
+        "vesselName", "location", "schedule", "initSchedule", "line",
+        "requestedETA"]
     assert set(cntr_info_keys) == set(data)
 
     # Check schedule keys
@@ -228,7 +230,8 @@ def test_load_data(app):
         
         # Write record to db
         query = {
-            "bkgNo": "OSAB76633400", "user": None, "line": "ONE", "refId": "1"
+            "bkgNo": "OSAB76633400", "user": None,
+            "line": "ONE", "refId": "1", "requestedETA": "-"
         }
         raw = extract_data(query)
         data = transform_data(raw)
@@ -279,7 +282,8 @@ def test_etl_one(app):
         db = conn[db_name]
         db.tracking.delete_many({})
         query = {
-            "bkgNo": "OSAB76633400", "user": None, "line": "ONE", "refId": "1"
+            "bkgNo": "OSAB76633400", "user": None,
+            "line": "ONE", "refId": "1", "requestedETA": "-"
         }
         result = etl_one(query, conn, db)
         assert result == {"etl_message": "New record successfully added"}

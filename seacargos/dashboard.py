@@ -60,21 +60,25 @@ def dashboard():
     
     # POST request
     if request.method == "POST":
-        # Check booking number input
-        user_input = request.form["booking"]
-        query = validate_user_input(user_input)
-        # Check refId input
-        if len(request.form["refId"]) > 0:
-            query["refId"] = request.form["refId"]
-        else:
-            query["refId"] = "-"
-        # Check requested ETA input
-        if len(request.form["requestedETA"]) > 0:
-            query["requestedETA"] = request.form["requestedETA"]
-        else:
-            query["requestedETA"] = "-"
-        # Check query vs db records
+        # Validate booking number
+        booking = request.form["booking"]
+        query = validate_user_input(booking)
+        
+        # Prevent records duplication in database
         if check_db_records(query, db):
+            # Prepare default values
+            query["refId"] = "-"
+            query["requestedETA"] = "-"
+
+            # Check refId input and update value
+            if len(request.form["refId"]) > 0:
+                query["refId"] = request.form["refId"]
+
+            # Check requested ETA input and update value
+            if len(request.form["requestedETA"]) > 0:
+                query["requestedETA"] = request.form["requestedETA"]
+
+            # Run ETL and update content     
             content.update(etl_one(query, conn, db))
     
     # GET request
@@ -161,8 +165,7 @@ def validate_user_input(user_input):
 @ping
 def check_db_records(query, db):
     """Use query argument to count documents in database
-    shipments and tracking collections. Return True if count is 0
-    in both collections."""
+    tracking collection. Return True if count is 0."""
     if not query:
         #log("[oneline.py] [check_db_records()]"\
           #  + f" [Wrong query {query}]")
@@ -223,7 +226,7 @@ def schedule_table_data(cursor):
     format_string = "%d-%m-%Y %H:%M"
     table_data = {"table": []}
     for c in cursor:
-        # Check requestedETA and convert
+        # Check requestedETA and convert to string
         eta_delay = "-"
         if isinstance(c["requestedETA"], dt):
             eta_delay = (c["arrivalDate"] - c["requestedETA"]).days
