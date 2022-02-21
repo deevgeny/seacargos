@@ -116,6 +116,9 @@ def transform_data(data):
             "blNo": data["container_data"]["blNo"],
             "user": data["query"]["user"], "line": data["query"]["line"],
             "refId": data["query"]["refId"],
+            "requestedETA": datetime.strptime(
+                data["query"]["requestedETA"], "%Y-%m-%d"
+                ),
             "trackStart": timestamp,
             "regularUpdate": timestamp,
             "recordUpdate": timestamp,

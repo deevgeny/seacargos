@@ -70,6 +70,8 @@
         <th>To</th>
         <th>Arrival</th>
         <th>Total Days</th>
+        <th>Requested ETA</th>
+        <th>ETA delay</th>
       </tr>
       {% for row in content.table %}
         <tr>
@@ -80,10 +82,12 @@
           <td>{{ row.container }}</td>
           <td>{{ row.type }}</td>
           <td>{{ row.from.location }}<br>{{ row.from.terminal }}</td>
-          <td>{{ row.departure }}</td>
+          <td style="text-align: center;">{{ row.departure }}</td>
           <td>{{ row.to.location }}<br>{{ row.to.terminal }}</td>
-          <td>{{ row.arrival }}</td>
+          <td style="text-align: center;">{{ row.arrival }}</td>
           <td style="text-align: center;">{{ row.totalDays }}</td>
+          <td style="text-align: center;">{{ row.requestedETA }}</td>
+          <td style="text-align: center;">{{ row.etaDelay }}</td>
         </tr>
       {% endfor %}
     </table>

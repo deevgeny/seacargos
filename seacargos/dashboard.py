@@ -60,12 +60,20 @@ def dashboard():
     
     # POST request
     if request.method == "POST":
+        # Check booking number input
         user_input = request.form["booking"]
         query = validate_user_input(user_input)
+        # Check refId input
         if len(request.form["refId"]) > 0:
             query["refId"] = request.form["refId"]
         else:
             query["refId"] = "-"
+        # Check requested ETA input
+        if len(request.form["requestedETA"]) > 0:
+            query["requestedETA"] = request.form["requestedETA"]
+        else:
+            query["requestedETA"] = "-"
+        # Check query vs db records
         if check_db_records(query, db):
             content.update(etl_one(query, conn, db))
     
@@ -215,6 +223,12 @@ def schedule_table_data(cursor):
     format_string = "%d-%m-%Y %H:%M"
     table_data = {"table": []}
     for c in cursor:
+        # Check requestedETA and convert
+        eta_delay = "-"
+        if isinstance(c["requestedETA"], dt):
+            eta_delay = (c["arrivalDate"] - c["requestedETA"]).days
+            c["requestedETA"] = c["requestedETA"].strftime("%d-%m-%Y")
+
         # Construct and append table data row
         table_data["table"].append(
             {"refId": c["refId"],
@@ -232,7 +246,9 @@ def schedule_table_data(cursor):
              },
              #"arrival": dt.strftime(c["arrivalDate"], format_string),
              "arrival": c["arrivalDate"].strftime(format_string),
-             "totalDays": (c["arrivalDate"] - c["departureDate"]).days
+             "totalDays": (c["arrivalDate"] - c["departureDate"]).days,
+             "requestedETA": c["requestedETA"],
+             "etaDelay": eta_delay
             }
         )
     return table_data
