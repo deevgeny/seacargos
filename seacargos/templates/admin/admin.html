@@ -30,13 +30,14 @@
 
 {# Page content block #}
 {% block content %}
-<div id="admin">
-  <div id="left" class="info-box">
+<div id="admin-grid">
+  <div id="users" class="info-box">
     <div class="caption">Users</div>
     <div class="record">Admin users: {{ content.users.admin }}</div>
     <div class="record">Regular users: {{ content.users.admin }}</div>
   </div>
-  <div id="middle" class="info-box">
+  
+  <div id="database" class="info-box">
     <div class="caption">Database</div>
     <div class="record">Total: {{ content.db.storage_size }} / {{ content.db.objects }} objects</div>
     {% for row in content.db.collections %}
@@ -45,12 +46,25 @@
       </div>
     {% endfor %}
   </div>
-  <div id="right" class="info-box">
+  <div id="logs" class="info-box">
     <div class="caption">ETL Logs</div>
     <div class="record">Logs: {{ content.etl_log.logs }}</div>
     <div class="record">File size: {{ content.etl_log.size }}</div>
   </div>
+  <div id="users-links" class="link-box">
+    <a href="#">Add user</a> | 
+    <a href="#">Edit user</a> | 
+    <a href="#">Delete user</a> | 
+    <a href="#">View users</a>
+  </div>
+  <div id="database-links" class="link-box">
+    <a href="#">View database</a> 
+  </div>
+  <div id="logs-links" class="link-box">
+    <a href="#">View logs</a> 
+  </div>
 </div>
+
   {% if g.user %}
    <p>{{ content }}</p>
   {% endif %}

@@ -9,7 +9,7 @@ body {
 
 /* GRIDS LAYOUTS */
 @media (orientation: landscape) {
-    #grid {
+    #page-grid {
         display: grid;
         grid-template-areas: "header header"
                              "navigation-menu login-menu"
@@ -19,21 +19,22 @@ body {
         grid-template-columns: auto auto;
         grid-template-rows: auto auto auto 1fr auto;
     }
-    #dashboard {
+    #dashboard-grid {
         display: grid;
         grid-template-areas: "tracking-form tracking-summary location-summary"
                              "schedule-table schedule-table schedule-table";
         grid-template-columns: auto 1fr auto;
         grid-template-rows: auto 1fr;
     }
-    #admin {
+    #admin-grid {
         display: grid;
-        grid-template-areas: "left middle right";
+        grid-template-areas: "users database logs"
+                             "users-links database-links logs-links";
         grid-template-columns: auto auto auto;
-        grid-template-rows: auto;
+        grid-template-rows: auto auto;
     }
 
-    /* Grid elements */
+    /* Page-grid elements */
     #header {grid-area: header; justify-self: stretch;}
     #navigation-menu {grid-area: navigation-menu; align-self: left;}
     #login-menu {grid-area: login-menu; align-self: right;}
@@ -41,16 +42,19 @@ body {
     #content {grid-area: content; justify-self: center;}
     #footer {grid-area: footer; justify-self: stretch;}
 
-    /* Dashboard elements */
+    /* Dashboard-grid elements */
     #tracking-form {grid-area: tracking-form; place-self: center left; margin-left: 10px;}
     #tracking-summary {grid-area: tracking-summary; place-self: center center; margin: 0 10px 0;}
     #location-summary {grid-area: location-summary; place-self: center right; margin-right: 10px;}
     #schedule-table {grid-area: schedule-table; place-self: center center; margin: 0 10px 0;}
 
-    /* Admin panel elements */
-    #left {grid-area: left; place-self: center left; margin-left: 10px;}
-    #middle {grid-area: middle; place-self: center center; margin: 0 10px 0;}
-    #right {grid-area: right; place-self: center right; margin-right: 10px;}
+    /* Admin-grid elements */
+    #users {grid-area: users; place-self: center left; margin-left: 10px;}
+    #database {grid-area: database; place-self: center center; margin: 0 10px 0;}
+    #logs {grid-area: logs; place-self: center right; margin-right: 10px;}
+    #users-links {grid-area: users-links; place-self: center left; margin-left: 10px;}
+    #database-links {grid-area: database-links; place-self: center center; margin: 0 10px 0;}
+    #logs-links {grid-area: logs-links; place-self: center right; margin-right: 10px;}
 }
 
 /* Grid classes (page layout) */
@@ -206,6 +210,14 @@ form.tracking {
     border-collapse: collapse;
     padding: 5px;
     font-size: 12px;
+}
+
+.link-box {
+    /*border: 1px solid black;*/
+    min-height: 30px;
+    min-width: 300px;
+    font-size: 14px;
+    text-align: center;
 }
 
 /* Login form */
