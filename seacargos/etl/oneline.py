@@ -174,9 +174,9 @@ def load_data(data, conn, db):
         return {"etl_message": "No data to load yet."}
     try:
         conn.admin.command("ping")
-        cur_tracking = db.tracking.insert_one(data)
-        if cur_tracking.acknowledged == False:
-            log("[oneline.py] [transform_data()] "\
+        cursor = db.tracking.insert_one(data)
+        if cursor.acknowledged == False:
+            log("[oneline.py] [load_data()] "\
                 + f"[{data['bkgNo']} not loaded to tracking]")
             return {"etl_message": "Write operation failure"}
         else:
@@ -186,8 +186,8 @@ def load_data(data, conn, db):
             + f"[Connection failure for {data['bkgNo']}]")
         return {"etl_message": "Database connection failure"}
     except BaseException as err:
-        log("[oneline.py] [transform_data()] "\
-            + f"[{err.details} for {data['bkgNo']}]")
+        log("[oneline.py] [load_data()] "\
+            + f"[{err} for {data['bkgNo']}]")
         return {"etl_message": "Unexpected error"}
 
 # Main ETL function
