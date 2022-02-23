@@ -1,0 +1,61 @@
+<!--Seacargos - sea cargos aggregator web application.-->
+<!--Copyright (C) 2022 Evgeny Deriglazov-->
+<!--https://github.com/evgeny81d/seacargos/blob/main/LICENSE-->
+{% extends 'base.html' %}
+
+{# Add dashboard caption to title tag #}
+{% block title %}
+  {% if g.user %}
+    | Admin panel add user
+  {% endif %}
+{% endblock title %}
+
+{# Display user name and logout link on navigation menu #}
+{% block navigation_menu %}
+  {% if g.user %}
+    <a href="{{ url_for('admin') }}">Admin panel</a>
+  {% endif %}
+{% endblock navigation_menu %}
+
+{# Display user name and logout link on login menu #}
+{% block login_menu %}
+  {% if g.user %}
+    User: {{ g.user['name'] }} | <a href="{{ url_for('home.logout')}}">Logout</a>
+  {% endif %}
+{% endblock login_menu %}
+
+{# Display messages if exists #}
+{% block messages %}
+  {% for message in get_flashed_messages() %} 
+    <div class="error-message">{{ message }}</div>
+  {% endfor %}
+{% endblock messages %}
+
+{# Page content block #}
+{% block content %}
+<div id="admin-grid">
+  <div id="center-box" class="info-box">
+    <div class="caption">Add user</div>
+    <form method="post" class="add-user">
+      <label for="user-name">User name:</label>
+      <input name="user-name" id="user-name" required>
+      <label for="role">Role:</label>
+      <select name="role" id="role">
+          <option value="" selected></option>
+          {% for option in content.options %}
+          <option value="{{ option }}">{{ option }}</option>
+          {% endfor %}
+      </select>  
+      <label for="pwd">Password:</label>
+      <input type="password" name="pwd" id="pwd">
+      <label for="pwd-repeat">Repeat password:</label>
+      <input type="password" name="pwd-repeat" id="pwd-repeat">
+      <input type="submit" value="Add">
+    </form>
+  </div>
+</div>
+
+  {% if g.user %}
+   <p>{{ content }}</p>
+  {% endif %}
+{% endblock %}

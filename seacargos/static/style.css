@@ -28,8 +28,8 @@ body {
     }
     #admin-grid {
         display: grid;
-        grid-template-areas: "users database logs"
-                             "users-links database-links logs-links";
+        grid-template-areas: "left-box center-box right-box"
+                             "left-box-links center-box-links right-box-links";
         grid-template-columns: auto auto auto;
         grid-template-rows: auto auto;
     }
@@ -49,12 +49,12 @@ body {
     #schedule-table {grid-area: schedule-table; place-self: center center; margin: 0 10px 0;}
 
     /* Admin-grid elements */
-    #users {grid-area: users; place-self: center left; margin-left: 10px;}
-    #database {grid-area: database; place-self: center center; margin: 0 10px 0;}
-    #logs {grid-area: logs; place-self: center right; margin-right: 10px;}
-    #users-links {grid-area: users-links; place-self: center left; margin-left: 10px;}
-    #database-links {grid-area: database-links; place-self: center center; margin: 0 10px 0;}
-    #logs-links {grid-area: logs-links; place-self: center right; margin-right: 10px;}
+    #left-box {grid-area: left-box; place-self: center left; margin-left: 10px;}
+    #center-box {grid-area: center-box; place-self: center center; margin: 0 10px 0;}
+    #right-box {grid-area: right-box; place-self: center right; margin-right: 10px;}
+    #left-box-links {grid-area: left-box-links; place-self: center left; margin-left: 10px;}
+    #center-box-links {grid-area: center-box-links; place-self: center center; margin: 0 10px 0;}
+    #right-box-links {grid-area: right-box-links; place-self: center right; margin-right: 10px;}
 }
 
 /* Grid classes (page layout) */
@@ -177,7 +177,7 @@ form.tracking {
         margin: 5px 10px 5px 0;
         font-size: 12px;
     }
-    input.date {
+    form.tracking.input.date {
         grid-column: fields;
         grid-row: auto;
         place-self: center right;
@@ -185,6 +185,7 @@ form.tracking {
         margin: 5px 10px 5px 0;
         font-size: 12px;
     }
+
 /* Admin grid elements (admin page elements) */
 .info-box {
     border: 1px solid black;
@@ -205,13 +206,6 @@ form.tracking {
     margin: 5px 10px 5px 10px;
 }
 
-.info-box table, th, td {
-    border: 0px solid black;
-    border-collapse: collapse;
-    padding: 5px;
-    font-size: 12px;
-}
-
 .link-box {
     /*border: 1px solid black;*/
     min-height: 30px;
@@ -220,7 +214,48 @@ form.tracking {
     text-align: center;
 }
 
-/* Login form */
+/* Add-user form */
+form.add-user {
+    display: grid;
+    grid-template-columns: [labels] auto [fields] auto;
+    grid-auto-flow: row dense;
+    width: 300px;
+    /*margin-top: 50px;*/
+    place-self: center center;
+}
+    form.add-user > label {
+        grid-column: labels;
+        grid-row: auto;
+        place-self: center left;
+        font-size: 14px;
+        margin: 5px 0 5px 10px;
+    }
+    form.add-user > input {
+        grid-column: fields;
+        grid-row: auto;
+        place-self: center right;
+        max-width: 105px;
+        margin: 5px 10px 5px 0;
+        font-size: 12px;
+    }
+    form.add-user.input.submit {
+        grid-column: fields;
+        grid-row: auto;
+        place-self: center right;
+        max-width: 30px;
+        margin: 5px 10px 5px 0;
+        font-size: 12px;
+    }
+    form.add-user > select {
+        grid-column: fields;
+        grid-row: auto;
+        place-self: center right;
+        width: 113px;
+        margin: 5px 10px 5px 0;
+        font-size: 12px;
+    }
+
+/* Home page login form */
 form.login-form {
     display: grid;
     grid-template-columns: [labels] auto [fields] auto;

@@ -1,3 +1,6 @@
+<!--Seacargos - sea cargos aggregator web application.-->
+<!--Copyright (C) 2022 Evgeny Deriglazov-->
+<!--https://github.com/evgeny81d/seacargos/blob/main/LICENSE-->
 {% extends 'base.html' %}
 
 {# Add dashboard caption to title tag #}
@@ -10,7 +13,7 @@
 {# Display user name and logout link on navigation menu #}
 {% block navigation_menu %}
   {% if g.user %}
-    <a href="#">Some link</a>
+    <a href="{{ url_for('admin') }}">Admin panel</a>
   {% endif %}
 {% endblock navigation_menu %}
 
@@ -31,13 +34,12 @@
 {# Page content block #}
 {% block content %}
 <div id="admin-grid">
-  <div id="users" class="info-box">
+  <div id="left-box" class="info-box">
     <div class="caption">Users</div>
     <div class="record">Admin users: {{ content.users.admin }}</div>
-    <div class="record">Regular users: {{ content.users.admin }}</div>
+    <div class="record">Regular users: {{ content.users.user }}</div>
   </div>
-  
-  <div id="database" class="info-box">
+  <div id="center-box" class="info-box">
     <div class="caption">Database</div>
     <div class="record">Total: {{ content.db.storage_size }} / {{ content.db.objects }} objects</div>
     {% for row in content.db.collections %}
@@ -46,21 +48,22 @@
       </div>
     {% endfor %}
   </div>
-  <div id="logs" class="info-box">
+  <div id="right-box" class="info-box">
     <div class="caption">ETL Logs</div>
     <div class="record">Logs: {{ content.etl_log.logs }}</div>
     <div class="record">File size: {{ content.etl_log.size }}</div>
   </div>
-  <div id="users-links" class="link-box">
-    <a href="#">Add user</a> | 
+  <!--Links-->
+  <div id="left-box-links" class="link-box">
+    <a href="{{ url_for('admin.add_user') }}">Add user</a> | 
     <a href="#">Edit user</a> | 
     <a href="#">Delete user</a> | 
     <a href="#">View users</a>
   </div>
-  <div id="database-links" class="link-box">
+  <div id="center-box-links" class="link-box">
     <a href="#">View database</a> 
   </div>
-  <div id="logs-links" class="link-box">
+  <div id="right-box-links" class="link-box">
     <a href="#">View logs</a> 
   </div>
 </div>

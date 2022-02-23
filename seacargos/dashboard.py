@@ -23,6 +23,17 @@ from seacargos.etl.oneline_update import record_schedule_update
 
 bp = Blueprint("dashboard", __name__)
 
+@bp.before_app_request
+def load_logged_in_user():
+    """Loads logged in user from session to g."""
+    user_id = session.get("user_id")
+
+    if user_id is None:
+        g.user = None
+    else:
+        db = db_conn()[g.db_name]
+        g.user = db.users.find_one({"_id": ObjectId(user_id)})
+
 def log(message):
     """Log function to log errors (debug version)."""
     timestamp = dt.strftime(dt.now(), "%Y-%m-%d %H:%M:%S")
@@ -38,17 +49,6 @@ def user_login_required(view):
             abort(403, "You are note authorized to view this page.")
         return view(**kwargs)
     return wrapped_view
-
-@bp.before_app_request
-def load_logged_in_user():
-    """Loads logged in user from session to g."""
-    user_id = session.get("user_id")
-
-    if user_id is None:
-        g.user = None
-    else:
-        db = db_conn()[g.db_name]
-        g.user = db.users.find_one({"_id": ObjectId(user_id)})
 
 @bp.route("/dashboard", methods=("GET", "POST"))
 @user_login_required
