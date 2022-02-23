@@ -62,7 +62,7 @@ def dashboard():
     if request.method == "POST":
         # Validate booking number
         booking = request.form["booking"]
-        query = validate_user_input(booking)
+        query = validate_booking_number(booking)
         
         # Prevent records duplication in database
         if check_db_records(query, db):
@@ -144,8 +144,8 @@ def ping(func):
             return False
     return wrapper
 
-def validate_user_input(user_input):
-    """Validate user booking or container input.
+def validate_booking_number(user_input):
+    """Validate user booking or container number input.
     Return MongoDB query."""
     if len(user_input) == 12 and user_input[0:4].isalpha():
         return {

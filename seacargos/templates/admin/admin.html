@@ -1,23 +1,57 @@
 {% extends 'base.html' %}
 
+{# Add dashboard caption to title tag #}
 {% block title %}
-{% if g.user %}
-| Admin panel
-{% endif %}
-{% endblock %}
+  {% if g.user %}
+    | Admin panel
+  {% endif %}
+{% endblock title %}
 
-{% block top_menu %}
+{# Display user name and logout link on navigation menu #}
+{% block navigation_menu %}
+  {% if g.user %}
+    <a href="#">Some link</a>
+  {% endif %}
+{% endblock navigation_menu %}
+
+{# Display user name and logout link on login menu #}
+{% block login_menu %}
   {% if g.user %}
     User: {{ g.user['name'] }} | <a href="{{ url_for('home.logout')}}">Logout</a>
   {% endif %}
-{% endblock %}
+{% endblock login_menu %}
 
+{# Display messages if exists #}
+{% block messages %}
+  {% for message in get_flashed_messages() %} 
+    <div class="error-message">{{ message }}</div>
+  {% endfor %}
+{% endblock messages %}
+
+{# Page content block #}
 {% block content %}
+<div id="admin">
+  <div id="left" class="info-box">
+    <div class="caption">Users</div>
+    <div class="record">Admin users: {{ content.users.admin }}</div>
+    <div class="record">Regular users: {{ content.users.admin }}</div>
+  </div>
+  <div id="middle" class="info-box">
+    <div class="caption">Database</div>
+    <div class="record">Total: {{ content.db.storage_size }} / {{ content.db.objects }} objects</div>
+    {% for row in content.db.collections %}
+      <div class="record">
+        {{ row.name }}: {{ row.storage_size }} / {{ row.objects }} objects
+      </div>
+    {% endfor %}
+  </div>
+  <div id="right" class="info-box">
+    <div class="caption">ETL Logs</div>
+    <div class="record">Logs: {{ content.etl_log.logs }}</div>
+    <div class="record">File size: {{ content.etl_log.size }}</div>
+  </div>
+</div>
   {% if g.user %}
-   <h3>Records in seacargos database {{ content }}</h3>
-   <h4>User id: {{ content.user._id }}</h4>
-   <h4>User name: {{ content.user.name }}</h4>
-   <h4>User role: {{ content.user.role }}</h4>
-   <h4>User password: {{ content.user.password }}</h4>
+   <p>{{ content }}</p>
   {% endif %}
 {% endblock %}

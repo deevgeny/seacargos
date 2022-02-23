@@ -26,6 +26,12 @@ body {
         grid-template-columns: auto 1fr auto;
         grid-template-rows: auto 1fr;
     }
+    #admin {
+        display: grid;
+        grid-template-areas: "left middle right";
+        grid-template-columns: auto auto auto;
+        grid-template-rows: auto;
+    }
 
     /* Grid elements */
     #header {grid-area: header; justify-self: stretch;}
@@ -40,9 +46,14 @@ body {
     #tracking-summary {grid-area: tracking-summary; place-self: center center; margin: 0 10px 0;}
     #location-summary {grid-area: location-summary; place-self: center right; margin-right: 10px;}
     #schedule-table {grid-area: schedule-table; place-self: center center; margin: 0 10px 0;}
+
+    /* Admin panel elements */
+    #left {grid-area: left; place-self: center left; margin-left: 10px;}
+    #middle {grid-area: middle; place-self: center center; margin: 0 10px 0;}
+    #right {grid-area: right; place-self: center right; margin-right: 10px;}
 }
 
-/* Grid classes */
+/* Grid classes (page layout) */
 .header-bar {
     font-size: 20px;
     padding: 20px 0px;
@@ -87,7 +98,7 @@ body {
     border-top: 1px solid black;
 }
 
-/* Dashboard classes */
+/* Dashboard classes (homepage dashboard elements) */
 .tracking-form-container {
     border: 1px solid black;
     min-height: 158px;
@@ -102,7 +113,7 @@ body {
     .tracking-summary-container .record {
         font-size: 14px;
         text-align: left;
-        margin: 5px 0 5px 10px;
+        margin: 5px 10px 5px 10px;
 
     }
     .tracking-summary-container .message {
@@ -137,31 +148,6 @@ body {
         font-size: 16px;
         text-align: center;
     }
-/* Forms */
-form.login-form {
-    display: grid;
-    grid-template-columns: [labels] auto [fields] auto;
-    grid-auto-flow: row dense;
-    width: 200px;
-    margin-top: 50px;
-    place-self: center stretch;
-}
-    form.login-form > label {
-        grid-column: labels;
-        grid-row: auto;
-        place-self: center left;
-        /*align-self: center;
-        justify-self: left;*/
-    }
-    form.login-form > input {
-        grid-column: fields;
-        grid-row: auto;
-        place-self: center right;
-        /*align-self: center;
-        justify-self: left;*/
-        margin: 5px 0;
-        max-width: 100px;
-    }
 
 /*Tracking form element styles*/
 form.tracking {
@@ -194,4 +180,56 @@ form.tracking {
         width: 105px;
         margin: 5px 10px 5px 0;
         font-size: 12px;
+    }
+/* Admin grid elements (admin page elements) */
+.info-box {
+    border: 1px solid black;
+    min-height: 158px;
+    min-width: 300px;
+}
+
+.info-box .caption {
+    font-size: 14px;
+    text-align: center;
+    padding: 5px;
+    font-weight: bold;
+}
+
+.info-box .record {
+    font-size: 14px;
+    text-align: left;
+    margin: 5px 10px 5px 10px;
+}
+
+.info-box table, th, td {
+    border: 0px solid black;
+    border-collapse: collapse;
+    padding: 5px;
+    font-size: 12px;
+}
+
+/* Login form */
+form.login-form {
+    display: grid;
+    grid-template-columns: [labels] auto [fields] auto;
+    grid-auto-flow: row dense;
+    width: 200px;
+    margin-top: 50px;
+    place-self: center stretch;
+}
+    form.login-form > label {
+        grid-column: labels;
+        grid-row: auto;
+        place-self: center left;
+        /*align-self: center;
+        justify-self: left;*/
+    }
+    form.login-form > input {
+        grid-column: fields;
+        grid-row: auto;
+        place-self: center right;
+        /*align-self: center;
+        justify-self: left;*/
+        margin: 5px 0;
+        max-width: 100px;
     }

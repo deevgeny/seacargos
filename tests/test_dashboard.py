@@ -4,11 +4,14 @@
 
 from flask import g, session, get_flashed_messages
 from pymongo.mongo_client import MongoClient
-from seacargos.dashboard import (
-    validate_user_input, check_db_records, tracking_summary,
-    db_tracking_data, schedule_table_data, ping, db_get_record,
-    prepare_record_details
-)
+from seacargos.dashboard import validate_booking_number
+from seacargos.dashboard import check_db_records
+from seacargos.dashboard import tracking_summary
+from seacargos.dashboard import db_tracking_data
+from seacargos.dashboard import schedule_table_data
+from seacargos.dashboard import ping
+from seacargos.dashboard import db_get_record
+from seacargos.dashboard import prepare_record_details
 from seacargos.db import db_conn
 import json
 from bson.json_util import dumps
@@ -194,37 +197,37 @@ def test_validate_user_input(client, app):
         assert g.user != None
 
         # Test booking number condition
-        assert validate_user_input("OSAB12345678") == \
+        assert validate_booking_number("OSAB12345678") == \
             {"bkgNo": "OSAB12345678", "line": "ONE",
             "user": "test", "trackEnd": None}
-        assert validate_user_input("osab12345678") == \
+        assert validate_booking_number("osab12345678") == \
             {"bkgNo": "OSAB12345678", "line": "ONE",
             "user": "test", "trackEnd": None}
 
         # Test container number condition
-        assert validate_user_input("TCKU1234567") == \
+        assert validate_booking_number("TCKU1234567") == \
             {"cntrNo": "TCKU1234567", "line": "ONE",
             "user": "test", "trackEnd": None}
-        assert validate_user_input("tcku1234567") == \
+        assert validate_booking_number("tcku1234567") == \
             {"cntrNo": "TCKU1234567", "line": "ONE",
             "user": "test", "trackEnd": None}
         
         # Test wrong booking number condition len = 12
         with app.test_request_context("/dashboard"):
-            assert validate_user_input("12345678OSAB") == \
+            assert validate_booking_number("12345678OSAB") == \
                 False
             assert get_flashed_messages() == \
                 ["Incorrect booking or container number 12345678OSAB"]
         
         # Test wrong booking number condition len > 12
         with app.test_request_context("/dashboard"):
-            assert validate_user_input("OSAB123456789") == \
+            assert validate_booking_number("OSAB123456789") == \
                 False
             assert get_flashed_messages() == \
                 ["Incorrect booking or container number OSAB123456789"]
         with app.test_request_context("/dashboard"):
             # Test wrong booking number condition len < 11
-            assert validate_user_input("TCKU123456") == \
+            assert validate_booking_number("TCKU123456") == \
                 False
             assert get_flashed_messages() == \
                 ["Incorrect booking or container number TCKU123456"]

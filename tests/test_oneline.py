@@ -211,8 +211,8 @@ def test_transform_data():
 
 def test_load_data(app):
     """Test load_data() function."""
-    # Cursor.acknowledged == False condition not covered
     with app.app_context():
+        # cursor.acknowledged == False not covered
         # Prepare variables and database
         uri = app.config["DB_FRONTEND_URI"]
         db_name = app.config["DB_NAME"]
@@ -250,7 +250,7 @@ def test_load_data(app):
         # Verify log record
         with open("etl.log", "r") as f:
             check = f.read().split("\n")
-        assert "[oneline.py] [transform_data()]" in check[-1]
+        assert "[oneline.py] [load_data()]" in check[-1]
         assert "E11000 duplicate key error collection:" in check[-1]
         db.tracking.drop_index("test")
         db.tracking.delete_many({})
@@ -262,14 +262,12 @@ def test_load_data(app):
         # Verify log record
         #with open("etl.log", "r") as f:
         #    check = f.read().split("\n")
-        #assert "[oneline.py] [transform_data()]"\
+        #assert "[oneline.py] [load_data()]"\
         #    + f" [Connection failure for {query['bkgNo']}]" in check[-1]
         
-        # Cursor.acknowledged == False condition
-        # Not covered
-
         # Clean database and close db connection
         db.tracking.delete_many({})
+        del db
         conn.close()
 
 def test_etl_one(app):
@@ -290,4 +288,5 @@ def test_etl_one(app):
 
         # Clean database and close db connection
         db.tracking.delete_many({})
+        del db
         conn.close()
