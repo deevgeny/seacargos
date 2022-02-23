@@ -59,9 +59,9 @@
   <div id="location-summary" class="location-summary-container">
     <div class="caption">Location summary</div>
   </div>
-  <div id="schedule-table">
+  <div id="shipments-table">
     {% if content.table %}
-    <div class="caption">Schedule</div>
+    <div class="caption">Active shipments</div>
     <table>
       <tr>
         <th>Ref Id</th>
@@ -72,8 +72,8 @@
         <th>Departure</th>
         <th>To</th>
         <th>Arrival</th>
-        <th>Total Days</th>
         <th>Requested ETA</th>
+        <th>Total Days</th>
         <th>ETA delay</th>
       </tr>
       {% for row in content.table %}
@@ -88,8 +88,8 @@
           <td style="text-align: center;">{{ row.departure }}</td>
           <td>{{ row.to.location }}<br>{{ row.to.terminal }}</td>
           <td style="text-align: center;">{{ row.arrival }}</td>
-          <td style="text-align: center;">{{ row.totalDays }}</td>
           <td style="text-align: center;">{{ row.requestedETA }}</td>
+          <td style="text-align: center;">{{ row.totalDays }}</td>
           <td style="text-align: center;">{{ row.etaDelay }}</td>
         </tr>
       {% endfor %}

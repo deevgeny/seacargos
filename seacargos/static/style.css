@@ -22,7 +22,7 @@ body {
     #dashboard-grid {
         display: grid;
         grid-template-areas: "tracking-form tracking-summary location-summary"
-                             "schedule-table schedule-table schedule-table";
+                             "shipments-table shipments-table shipments-table";
         grid-template-columns: auto 1fr auto;
         grid-template-rows: auto 1fr;
     }
@@ -46,7 +46,7 @@ body {
     #tracking-form {grid-area: tracking-form; place-self: center left; margin-left: 10px;}
     #tracking-summary {grid-area: tracking-summary; place-self: center center; margin: 0 10px 0;}
     #location-summary {grid-area: location-summary; place-self: center right; margin-right: 10px;}
-    #schedule-table {grid-area: schedule-table; place-self: center center; margin: 0 10px 0;}
+    #shipments-table {grid-area: shipments-table; place-self: center center; margin: 0 10px 0;}
 
     /* Admin-grid elements */
     #left-box {grid-area: left-box; place-self: center left; margin-left: 10px;}
@@ -141,13 +141,13 @@ body {
     font-weight: bold;
 }
 
-#schedule-table table, th, td {
+#shipments-table table, th, td {
         border: 1px solid black;
         border-collapse: collapse;
         padding: 5px;
         font-size: 12px;
 }
-    #schedule-table .check-box {
+    #shipments-table .check-box {
         /* background-color: lightgreen; */
         font-size: 16px;
         text-align: center;
