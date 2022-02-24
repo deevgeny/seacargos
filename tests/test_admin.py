@@ -7,7 +7,7 @@ from flask import g, session, get_flashed_messages
 from pymongo.mongo_client import MongoClient
 from seacargos.db import db_conn
 from seacargos.admin import size
-from seacargos.admin import users
+from seacargos.admin import users_stats
 from seacargos.admin import database_stats
 from seacargos.admin import etl_log_stats
 
@@ -53,7 +53,7 @@ def test_size():
     assert size(1024**3 - 100000) == "1023.9 Mb"
     assert size(1024**3) == "1.0 Gb"
 
-def test_users(app):
+def test_users_stats(app):
     """Test users() function."""
     with app.app_context():
         db = db_conn()[g.db_name]
@@ -63,7 +63,7 @@ def test_users(app):
         db.users.delete_one({"name": "test3"})
 
         # Test initial state
-        assert users(db) == {"admin": 1, "user": 1}
+        assert users_stats(db) == {"admin": 1, "user": 1}
         # Test with extra users
         test_data = [
             {"name": "test1", "role": "user"},
@@ -71,7 +71,7 @@ def test_users(app):
             {"name": "test3", "role": "admin"}
         ]
         db.users.insert_many(test_data)
-        assert users(db) == {"admin": 2, "user": 3}
+        assert users_stats(db) == {"admin": 2, "user": 3}
 
         # Clean db after tests and check
         db.users.delete_one({"name": "test1"})

@@ -48,7 +48,7 @@ def admin():
     """Admin panel page."""
     db = db_conn()[g.db_name]
     content = {}
-    content["users"] = users(db)
+    content["users"] = users_stats(db)
     content["db"] = database_stats(db)
     content["etl_log"] = etl_log_stats()
     #flash("test message")
@@ -92,12 +92,12 @@ def size(bytes):
         return str(round(bytes / 1024**3, 1)) + " Gb"
 
 # Helper functions
-def users(db):
+def users_stats(db):
     """Prepare and return user stats."""
-    data = {}
-    data["admin"] = db.users.count_documents({"role": "admin"})
-    data["user"] = db.users.count_documents({"role": "user"})
-    return data
+    stats = {}
+    stats["admin"] = db.users.count_documents({"role": "admin"})
+    stats["user"] = db.users.count_documents({"role": "user"})
+    return stats
 
 def database_stats(db):
     """Prepare and return database stats."""
