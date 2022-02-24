@@ -49,8 +49,8 @@ def admin():
     db = db_conn()[g.db_name]
     content = {}
     content["users"] = users(db)
-    content["db"] = database(db)
-    content["etl_log"] = etl_logs()
+    content["db"] = database_stats(db)
+    content["etl_log"] = etl_log_stats()
     #flash("test message")
     return render_template('admin/admin.html', content=content)
 
@@ -99,22 +99,22 @@ def users(db):
     data["user"] = db.users.count_documents({"role": "user"})
     return data
 
-def database(db):
+def database_stats(db):
     """Prepare and return database stats."""
-    data = {"collections": []}
+    stats = {"collections": []}
     db_stats = db.command("dbstats")
     collections = db.list_collection_names()
-    data["storage_size"] = size(db_stats["storageSize"])
-    data["objects"] = db_stats["objects"]
+    stats["storage_size"] = size(db_stats["storageSize"])
+    stats["objects"] = db_stats["objects"]
     for coll in collections:
-        coll_data = {"name": coll}
+        data = {"name": coll}
         coll_stats = db.command("collstats", coll)
-        coll_data["storage_size"] = size(coll_stats["storageSize"])
-        coll_data["objects"] = coll_stats["count"]
-        data["collections"].append(coll_data)
-    return data
+        data["storage_size"] = size(coll_stats["storageSize"])
+        data["objects"] = coll_stats["count"]
+        stats["collections"].append(data)
+    return stats
 
-def etl_logs():
+def etl_log_stats():
     """Prepare and return etl log stats."""
     stats = {}
     if os.path.exists("etl.log"):
