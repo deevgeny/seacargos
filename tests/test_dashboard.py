@@ -50,7 +50,7 @@ def test_dashboard_response(client, app):
         login(client, user, pwd)
         response = client.get("/dashboard")
         assert response.status_code == 403
-        assert b'You are note authorized to view this page.' in response.data
+        assert b'You are not authorized to view this page.' in response.data
 
 def test_dashboard_input_form(client, app):
     """Test dashboard input form."""

@@ -77,14 +77,13 @@ def add_user():
             )
             flash("New user successfully added to database")
 
-
     return render_template("admin/add-user.html", content=content)
 
 def size(bytes):
     """Accepts size in bytes as integer and returns size as string
     with Kb, Mb or Gb abbr."""
     if bytes < 1024:
-        return str(bytes) + "bytes"
+        return str(bytes) + " bytes"
     elif bytes < 1024**2:
         return str(round(bytes / 1024, 1)) + " Kb"
     elif bytes < 1024**3:
@@ -102,18 +101,18 @@ def users(db):
 
 def database(db):
     """Prepare and return database stats."""
-    stats = {"collections": []}
+    data = {"collections": []}
     db_stats = db.command("dbstats")
     collections = db.list_collection_names()
-    stats["storage_size"] = size(db_stats["storageSize"])
-    stats["objects"] = db_stats["objects"]
+    data["storage_size"] = size(db_stats["storageSize"])
+    data["objects"] = db_stats["objects"]
     for coll in collections:
-        data = {"name": coll}
+        coll_data = {"name": coll}
         coll_stats = db.command("collstats", coll)
-        data["storage_size"] = size(coll_stats["storageSize"])
-        data["objects"] = coll_stats["count"]
-        stats["collections"].append(data)
-    return stats
+        coll_data["storage_size"] = size(coll_stats["storageSize"])
+        coll_data["objects"] = coll_stats["count"]
+        data["collections"].append(coll_data)
+    return data
 
 def etl_logs():
     """Prepare and return etl log stats."""

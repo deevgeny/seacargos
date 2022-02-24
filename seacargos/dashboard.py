@@ -46,7 +46,7 @@ def user_login_required(view):
         if g.user is None:
             return redirect(url_for("home"))
         elif g.user["role"] != "user":
-            abort(403, "You are note authorized to view this page.")
+            abort(403, "You are not authorized to view this page.")
         return view(**kwargs)
     return wrapped_view
 
