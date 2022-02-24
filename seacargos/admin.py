@@ -118,9 +118,12 @@ def database(db):
 def etl_logs():
     """Prepare and return etl log stats."""
     stats = {}
-    cwd = os.getcwd()
-    with open("etl.log", "r") as f:
-        logs = len(f.readlines())
+    if os.path.exists("etl.log"):
+        with open("etl.log", "r") as f:
+            logs = len(f.readlines())
+    else:
+        with open("etl.log", "a") as f:
+            logs = 0
     stats["logs"] = logs
     stats["size"] = size(os.path.getsize("etl.log"))
     return stats
