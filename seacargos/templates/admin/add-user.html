@@ -42,8 +42,8 @@
       <label for="role">Role:</label>
       <select name="role" id="role">
           <option value="" selected></option>
-          {% for option in content.options %}
-          <option value="{{ option }}">{{ option }}</option>
+          {% for role in content.roles %}
+          <option value="{{ role }}">{{ role }}</option>
           {% endfor %}
       </select>  
       <label for="pwd">Password:</label>
@@ -52,6 +52,9 @@
       <input type="password" name="pwd-repeat" id="pwd-repeat">
       <input type="submit" value="Add">
     </form>
+    {% if content.error %}
+    <div class="error">{{ content.error }}</div>
+    {% endif %}
   </div>
 </div>
 

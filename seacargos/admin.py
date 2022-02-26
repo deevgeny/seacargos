@@ -59,7 +59,7 @@ def admin():
 def add_user():
     """Add new user form page."""
     db = db_conn()[g.db_name]
-    content = {"options": ["admin", "user"]}
+    content = {"roles": ["admin", "user"]}
     # POST method
     if request.method == "POST":
         name = request.form["user-name"]
@@ -67,15 +67,19 @@ def add_user():
         pwd = request.form["pwd"]
         pwd_repeat = request.form["pwd-repeat"]
         if db.users.find_one({"name": name}):
-            flash(f"User name '{name}' already exists")
+            content["error"] = f"User name {name} already exists."
         elif pwd != pwd_repeat:
-            flash("Passwords does not match")
+            content["error"] = "Passwords does not match."
         else:
             pwd_hash = generate_password_hash(pwd)
-            db.users.insert_one(
+            cur = db.users.insert_one(
                 {"name": name, "role": role, "password": pwd_hash}
             )
-            flash("New user successfully added to database")
+            if cur.acknowledged and cur.inserted_id:
+                content["info"] = "New user successfully added to database."
+            else:
+                content["error"] = "Database write error."
+                # Add log
 
     return render_template("admin/add-user.html", content=content)
 
