@@ -70,6 +70,8 @@ def add_user():
             content["error"] = f"User name {name} already exists."
         elif pwd != pwd_repeat:
             content["error"] = "Passwords does not match."
+        elif role == "":
+            content["error"] = "Please select role."
         else:
             pwd_hash = generate_password_hash(pwd)
             cur = db.users.insert_one(
@@ -81,7 +83,44 @@ def add_user():
                 content["error"] = "Database write error."
                 # Add log
 
-    return render_template("admin/add-user.html", content=content)
+    return render_template("admin/add_user.html", content=content)
+
+@bp.route("/admin/edit-user", methods=("GET", "POST"))
+@admin_login_required
+def edit_user():
+    """Edit new user form page."""
+    db = db_conn()[g.db_name]
+    content = {"roles": ["admin", "user"]}
+    content["user_names"] = all_user_names_from_db(db)
+    # POST method
+    if request.method == "POST":
+        query = {}
+        change = {}
+        form_data = dict(request.form)
+        content["form"] = form_data # Debug
+
+        # Check user name
+        if form_data["user-name"] == "":
+            content["error"] = "Please select user."
+        else:
+            query["name"] = form_data["user-name"]
+        
+        # Check role
+        if form_data["role"] != "":
+            change["role"] = form_data["role"]
+
+        # Check passwords
+        if form_data["pwd"] != "" and form_data["pwd"] == form_data["pwd-repeat"]:
+            change["password"] = generate_password_hash(form_data["pwd"])
+        elif form_data["pwd"] != form_data["pwd-repeat"]:
+            content["error"] = "Passwords does not match."
+        
+        # Check request and change data
+        if len(query) == 1 and len(change) > 0:
+            content["q"] = query
+            content["ch"] = change
+
+    return render_template("admin/edit_user.html", content=content)
 
 def size(bytes):
     """Accepts size in bytes as integer and returns size as string
@@ -96,6 +135,7 @@ def size(bytes):
         return str(round(bytes / 1024**3, 1)) + " Gb"
 
 # Helper functions
+# Admin
 def users_stats(db):
     """Prepare and return user stats."""
     stats = {}
@@ -103,6 +143,7 @@ def users_stats(db):
     stats["user"] = db.users.count_documents({"role": "user"})
     return stats
 
+# Admin
 def database_stats(db):
     """Prepare and return database stats."""
     stats = {"collections": []}
@@ -118,6 +159,7 @@ def database_stats(db):
         stats["collections"].append(data)
     return stats
 
+# Admin
 def etl_log_stats():
     """Prepare and return etl log stats."""
     stats = {}
@@ -130,3 +172,13 @@ def etl_log_stats():
     stats["logs"] = logs
     stats["size"] = size(os.path.getsize("etl.log"))
     return stats
+
+# Admin/edit-user
+def all_user_names_from_db(db):
+    """Returns all user names from database in list."""
+    names = []
+    cursor = db.users.find({}, {"_id": 0, "name": 1})
+    for c in cursor:
+        names.append(c["name"])
+    return names
+    

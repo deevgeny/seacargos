@@ -6,7 +6,7 @@
 {# Add dashboard caption to title tag #}
 {% block title %}
   {% if g.user %}
-    | Admin panel add user
+    | Admin panel - add user
   {% endif %}
 {% endblock title %}
 
@@ -47,9 +47,9 @@
           {% endfor %}
       </select>  
       <label for="pwd">Password:</label>
-      <input type="password" name="pwd" id="pwd">
+      <input type="password" name="pwd" id="pwd" required>
       <label for="pwd-repeat">Repeat password:</label>
-      <input type="password" name="pwd-repeat" id="pwd-repeat">
+      <input type="password" name="pwd-repeat" id="pwd-repeat" required>
       <input type="submit" value="Add">
     </form>
     {% if content.error %}

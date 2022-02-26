@@ -82,6 +82,15 @@ def test_admin_add_user_form(client, app):
             follow_redirects=True)
         assert b"Passwords does not match." in response.data
         assert db.users.count_documents({"name": "test_3"}) == 0
+        
+        # Add user with no role and 'test_3' name
+        response = client.post(
+            "/admin/add-user",
+            data={"user-name": "test_3", "role": "",
+                "pwd": "abc123", "pwd-repeat": "abc123"},
+            follow_redirects=True)
+        assert b"Please select role." in response.data
+        assert db.users.count_documents({"name": "test_3"}) == 0
 
         # Clean database
         db.users.delete_one({"name": "test_1"})
