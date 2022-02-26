@@ -10,6 +10,7 @@ from seacargos.admin import size
 from seacargos.admin import users_stats
 from seacargos.admin import database_stats
 from seacargos.admin import etl_log_stats
+from seacargos.admin import active_user_names_from_db
 
 # Helper functions to run tests
 def login(client, user, pwd, follow=True):
@@ -117,3 +118,9 @@ def test_etl_log_stats():
     logs_size = size(os.path.getsize("etl.log"))
     assert stats["size"] == logs_size
     assert stats["logs"] == logs
+
+def test_active_user_names_from_db(app):
+    """Test active_user_names_from_db() function."""
+    with app.app_context():
+        db = db_conn()[g.db_name]
+        pass

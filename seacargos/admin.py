@@ -62,20 +62,19 @@ def add_user():
     content = {"roles": ["admin", "user"]}
     # POST method
     if request.method == "POST":
-        name = request.form["user-name"]
-        role = request.form["role"]
-        pwd = request.form["pwd"]
-        pwd_repeat = request.form["pwd-repeat"]
-        if db.users.find_one({"name": name}):
-            content["error"] = f"User name {name} already exists."
-        elif pwd != pwd_repeat:
+        form_data = dict(request.form)
+        if db.users.find_one({"name": form_data["user-name"]}):
+            content["error"] =\
+                f"User name {form_data['user-name']} already exists."
+        elif form_data["pwd"] != form_data["pwd-repeat"]:
             content["error"] = "Passwords does not match."
-        elif role == "":
+        elif form_data["role"] == "":
             content["error"] = "Please select role."
         else:
-            pwd_hash = generate_password_hash(pwd)
+            pwd_hash = generate_password_hash(form_data["pwd"])
             cur = db.users.insert_one(
-                {"name": name, "role": role, "password": pwd_hash}
+                {"name": form_data['user-name'], "role": form_data["role"],
+                "password": pwd_hash, "active": True}
             )
             if cur.acknowledged and cur.inserted_id:
                 content["info"] = "New user successfully added to database."
@@ -91,7 +90,7 @@ def edit_user():
     """Edit new user form page."""
     db = db_conn()[g.db_name]
     content = {"roles": ["admin", "user"]}
-    content["user_names"] = all_user_names_from_db(db)
+    content["user_names"] = active_user_names_from_db(db)
     # POST method
     if request.method == "POST":
         query = {}
@@ -113,7 +112,7 @@ def edit_user():
         elif form_data["pwd"] != form_data["pwd-repeat"]:
             content["error"] = "Passwords does not match."
         
-        # Check request and change data and make update or send error message
+        # Check request and change data, and make update or send error message
         if len(query) == 1 and len(change) > 0:
             cur = db.users.update_one(query, {"$set": change})
             if cur.raw_result["updatedExisting"]:
@@ -126,6 +125,26 @@ def edit_user():
             content["error"] = "Edit fields have been not filled."
 
     return render_template("admin/edit_user.html", content=content)
+
+@bp.route("/admin/delete-user", methods=("GET", "POST"))
+@admin_login_required
+def delete_user():
+    """Edit new user form page."""
+    db = db_conn()[g.db_name]
+    content = {}
+    content["user_names"] = active_user_names_from_db(db)
+    # POST method
+    if request.method == "POST":
+        form_data = dict(request.form)
+        if form_data["user-name"] != "":
+            db.users.update(
+                {"name": form_data["user-name"]},
+                {"$set": {"active": False}}
+                )
+        else:
+            content["error"] = "Please select user."
+
+    return render_template("admin/delete_user.html", content=content)
 
 def size(bytes):
     """Accepts size in bytes as integer and returns size as string
@@ -178,11 +197,11 @@ def etl_log_stats():
     stats["size"] = size(os.path.getsize("etl.log"))
     return stats
 
-# Admin/edit-user
-def all_user_names_from_db(db):
+# Admin/edit-user and admin/delete-user
+def active_user_names_from_db(db):
     """Returns all user names from database in list."""
     names = []
-    cursor = db.users.find({}, {"_id": 0, "name": 1})
+    cursor = db.users.find({"active": True}, {"_id": 0, "name": 1})
     for c in cursor:
         names.append(c["name"])
     return names
