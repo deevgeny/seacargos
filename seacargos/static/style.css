@@ -213,6 +213,13 @@ form.tracking {
     margin: 5px 10px 5px 10px;
 }
 
+.info-box .info {
+    font-size: 14px;
+    text-align: center;
+    color: green;
+    margin: 5px 10px 5px 10px;
+}
+
 .link-box {
     /*border: 1px solid black;*/
     min-height: 30px;

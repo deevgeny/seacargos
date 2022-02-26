@@ -97,12 +97,10 @@ def edit_user():
         query = {}
         change = {}
         form_data = dict(request.form)
-        content["form"] = form_data # Debug
+        #content["form"] = form_data # Debug
 
         # Check user name
-        if form_data["user-name"] == "":
-            content["error"] = "Please select user."
-        else:
+        if form_data["user-name"] != "":
             query["name"] = form_data["user-name"]
         
         # Check role
@@ -115,14 +113,16 @@ def edit_user():
         elif form_data["pwd"] != form_data["pwd-repeat"]:
             content["error"] = "Passwords does not match."
         
-        # Check request and change data and make update
+        # Check request and change data and make update or send error message
         if len(query) == 1 and len(change) > 0:
             cur = db.users.update_one(query, {"$set": change})
             if cur.raw_result["updatedExisting"]:
                 content["info"] = "User data successfully updated."
             else:
                 content["error"] = "User data was not updated."
-        else:
+        elif len(query) == 0:
+            content["error"] = "Please select user."
+        elif len(change) == 0 and content.get("error", None) == None:
             content["error"] = "Edit fields have been not filled."
 
     return render_template("admin/edit_user.html", content=content)

@@ -59,11 +59,9 @@
     </form>
     {% if content.error %}
     <div class="error">{{ content.error }}</div>
+    {% elif content.info %}
+    <div class="info">{{ content.info }}</div>
     {% endif %}
   </div>
 </div>
-
-  {% if g.user %}
-   <p>{{ content }}</p>
-  {% endif %}
-{% endblock %}
+{% endblock content %}

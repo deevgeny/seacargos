@@ -33,7 +33,7 @@ def test_admin_add_user_response(client, app):
         assert response.status_code == 200
 
 def test_admin_add_user_form(client, app):
-    """Test add_user() form."""
+    """Test add_user() function form."""
     with app.app_context():
         # "Database write error" not covered
         # Login and prepare database
@@ -51,6 +51,7 @@ def test_admin_add_user_form(client, app):
                 "pwd": "abc123", "pwd-repeat": "abc123"},
             follow_redirects=True)
         assert b"New user successfully added to database." in response.data
+        assert response.status_code == 200
         rec = db.users.find_one({"name": "test_1"})
         assert rec["role"] == "user"
         assert check_password_hash(rec["password"], "abc123")
