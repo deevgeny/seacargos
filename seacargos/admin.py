@@ -115,10 +115,15 @@ def edit_user():
         elif form_data["pwd"] != form_data["pwd-repeat"]:
             content["error"] = "Passwords does not match."
         
-        # Check request and change data
+        # Check request and change data and make update
         if len(query) == 1 and len(change) > 0:
-            content["q"] = query
-            content["ch"] = change
+            cur = db.users.update_one(query, {"$set": change})
+            if cur.raw_result["updatedExisting"]:
+                content["info"] = "User data successfully updated."
+            else:
+                content["error"] = "User data was not updated."
+        else:
+            content["error"] = "Edit fields have been not filled."
 
     return render_template("admin/edit_user.html", content=content)
 
