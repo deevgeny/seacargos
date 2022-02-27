@@ -25,7 +25,6 @@ bp = Blueprint('admin', __name__)
 def load_logged_in_user():
     """Loads logged in user from session to g."""
     user_id = session.get("user_id")
-
     if user_id is None:
         g.user = None
     else:

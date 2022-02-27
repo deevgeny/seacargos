@@ -22,6 +22,11 @@ def logout(client, follow=True):
 def test_home_simple_login(client, app):
     """Test home page for different logins."""
     with app.app_context():
+        # Prepare test database (set all users active)
+        db = db_conn()[g.db_name]
+        db.users.delete_one({"name": "fake"})
+        db.users.update_many({}, {"$set": {"active": True}})
+
         # Unauthenticated user
         response = client.get("/")
         assert response.status_code == 200
@@ -32,30 +37,49 @@ def test_home_simple_login(client, app):
         pwd = app.config["USER_PASSWORD"]
         response = login(client, user, pwd)
         assert response.status_code == 200
-        g.user != None
+        assert g.user != None
         logout(client)
+        assert g.user == None
         
-        # Log in user with role=user
+        # Log in user with role=admin
         user = app.config["ADMIN_NAME"]
         pwd = app.config["ADMIN_PASSWORD"]
         response = login(client, user, pwd)
         assert response.status_code == 200
+        assert g.user != None
         logout(client)
-        
+        assert g.user == None
+
         # Log in user with role=fake
         db = db_conn()[g.db_name]
         pwd_hash = generate_password_hash("fake")
         db.users.insert_one(
-            {"name": "fake", "password": pwd_hash, "role": "fake"}
+            {"name": "fake", "password": pwd_hash,
+            "role": "fake", "active": True}
             )
         response = login(client, "fake", "fake")
         assert response.status_code == 200
-        logout(client)
+        assert g.user == None
         db.users.delete_one({"name": "fake"})
+
+        # Locked user ("active": False)
+        db.users.update_one({"name": "test"}, {"$set": {"active": False}})
+        user = app.config["USER_NAME"]
+        pwd = app.config["USER_PASSWORD"]
+        response = login(client, user, pwd)
+        assert response.status_code == 200
+        assert g.user == None
+        assert b"Your login was expired." in response.data
+        db.users.update_one({"name": "test"}, {"$set": {"active": True}})
 
 def test_home_redirects_on_login_and_logout(client, app):
     """Test redirects on login and logout."""
     with app.app_context():
+        # Prepare test database (set all users active)
+        db = db_conn()[g.db_name]
+        db.users.delete_one({"name": "fake"})
+        db.users.update_many({}, {"$set": {"active": True}})
+
         # User with role=user login
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
@@ -101,6 +125,12 @@ def test_home_login_errors(client, app):
 def test_home_content_for_logged_user(client, app):
     """Test home page content for logged user for redirection links."""
     with app.app_context():
+        # Prepare test database (set all users active)
+        db = db_conn()[g.db_name]
+        db.users.delete_one({"name": "fake"})
+        db.users.update_many({}, {"$set": {"active": True}})
+
+        # Check page content
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
         response = login(client, user, pwd)

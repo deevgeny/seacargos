@@ -18,6 +18,10 @@ def login(client, user, pwd, follow=True):
 def test_admin_edit_user_response(client, app):
     """Test edit_user() response."""
     with app.app_context():
+        # Prepare test database (set all users active)
+        db = db_conn()[g.db_name]
+        db.users.update_many({}, {"$set": {"active": True}})
+
         # Not logged in user
         response = client.get("/admin/edit-user")
         assert g.user == None
@@ -31,6 +35,14 @@ def test_admin_edit_user_response(client, app):
         assert response.status_code == 200
         response = client.get("/admin/edit-user")
         assert response.status_code == 200
+
+        # Wrong user role
+        user = app.config["USER_NAME"]
+        pwd = app.config["USER_PASSWORD"]
+        login(client, user, pwd)
+        response = client.get("/admin/edit-user")
+        assert response.status_code == 403
+        assert b'You are not authorized to view this page.' in response.data
 
 def test_admin_edit_user_form(client, app):
     """Test edit_user() function form."""

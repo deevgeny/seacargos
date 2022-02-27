@@ -43,9 +43,10 @@ def test_setup_db(app):
         assert check_password_hash(
             user["password"], app.config["USER_PASSWORD"]
             )
+        assert user["active"] == True
         assert conn.test.users.count_documents(
             {"name": app.config["USER_NAME"],
-            "role": "user"}
+            "role": "user", "active": True}
             ) == 1
         # Check admin record
         admin = conn.test.users.find_one({"name": app.config["ADMIN_NAME"]})
@@ -53,9 +54,10 @@ def test_setup_db(app):
         assert check_password_hash(
             admin["password"], app.config["ADMIN_PASSWORD"]
             )
+        assert admin["active"] == True
         assert conn.test.users.count_documents(
             {"name": app.config["ADMIN_NAME"],
-            "role": "admin"}
+            "role": "admin", "active": True}
             ) == 1
         # Re-setup db and check number of users in it
         setup_db(app)

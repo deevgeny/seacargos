@@ -19,9 +19,17 @@ def login(client, user, pwd, follow=True):
         "/", data={"username": user, "password": pwd},
         follow_redirects=follow)
 
+def logout(client, follow=True):
+    """Simple logout function."""
+    return client.get("/logout", follow_redirects=follow)
+
 def test_admin_response(client, app):
     """Test admin panel for authenticated and not authenticated users."""
     with app.app_context():
+        # Prepare test database (set all users active)
+        db = db_conn()[g.db_name]
+        db.users.update_many({}, {"$set": {"active": True}})
+        
         # Not logged in user
         response = client.get("/admin")
         assert g.user == None
@@ -36,6 +44,7 @@ def test_admin_response(client, app):
         assert response.headers["Location"] == "http://localhost/admin"
         response = login(client, user, pwd)
         assert response.status_code == 200
+        logout(client)
         
         # Wrong user role
         user = app.config["USER_NAME"]
@@ -44,6 +53,17 @@ def test_admin_response(client, app):
         response = client.get("/admin")
         assert response.status_code == 403
         assert b'You are not authorized to view this page.' in response.data
+        logout(client)
+        
+        # Locked user ("active": False)
+        db.users.update_one({"name": "admin"}, {"$set": {"active": False}})
+        user = app.config["ADMIN_NAME"]
+        pwd = app.config["ADMIN_PASSWORD"]
+        response = login(client, user, pwd)
+        assert g.user == None
+        assert response.status_code == 200
+        assert b"Your login was expired." in response.data
+        db.users.update_one({"name": "admin"}, {"$set": {"active": True}})
 
 def test_size():
     """Test size() function."""
@@ -123,4 +143,9 @@ def test_active_user_names_from_db(app):
     """Test active_user_names_from_db() function."""
     with app.app_context():
         db = db_conn()[g.db_name]
-        pass
+        active_users = active_user_names_from_db(db)
+        check = []
+        cur = db.users.find({"active": True}, {"_id": 0, "name": 1})
+        for c in cur:
+            check.append(c["name"])
+        assert active_users == check

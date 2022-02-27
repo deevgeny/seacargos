@@ -5,6 +5,7 @@
 import os
 from flask import g, session, get_flashed_messages
 from pymongo.mongo_client import MongoClient
+from seacargos.dashboard import log
 from seacargos.db import db_conn
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -15,9 +16,17 @@ def login(client, user, pwd, follow=True):
         "/", data={"username": user, "password": pwd},
         follow_redirects=follow)
 
+def logout(client, follow=True):
+    """Simple logout function."""
+    return client.get("/logout", follow_redirects=follow)
+
 def test_admin_add_user_response(client, app):
     """Test add_user() response."""
     with app.app_context():
+        # Prepare test database (set all users active)
+        db = db_conn()[g.db_name]
+        db.users.update_many({}, {"$set": {"active": True}})
+
         # Not logged in user
         response = client.get("/admin/add-user")
         assert g.user == None
@@ -31,6 +40,20 @@ def test_admin_add_user_response(client, app):
         assert response.status_code == 200
         response = client.get("/admin/add-user")
         assert response.status_code == 200
+        assert g.user != None
+        logout(client)
+        assert g.user == None
+
+        # Wrong user role
+        user = app.config["USER_NAME"]
+        pwd = app.config["USER_PASSWORD"]
+        login(client, user, pwd)
+        response = client.get("/admin/add-user")
+        assert response.status_code == 403
+        assert g.user != None
+        assert b'You are not authorized to view this page.' in response.data
+        logout(client)
+        assert g.user == None       
 
 def test_admin_add_user_form(client, app):
     """Test add_user() function form."""
@@ -93,8 +116,9 @@ def test_admin_add_user_form(client, app):
         assert b"Please select role." in response.data
         assert db.users.count_documents({"name": "test_3"}) == 0
 
-        # Clean database
+        # Clean database and logout
         db.users.delete_one({"name": "test_1"})
         db.users.delete_one({"name": "test_2"})
+        logout(client)
         del db
 

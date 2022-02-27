@@ -46,7 +46,8 @@ def setup_db(app):
         db.users.insert_one(
             {'name': app.config['ADMIN_NAME'],
             'password': pwd,
-            'role': 'admin'}
+            'role': 'admin',
+            'active': True}
         )
 
     # Add simple user to database
@@ -56,7 +57,8 @@ def setup_db(app):
         db.users.insert_one(
             {'name': app.config['USER_NAME'],
             'password': pwd,
-            'role': 'user'}
+            'role': 'user',
+            'active': True}
         )
     
     # Add username unique index to database users collection

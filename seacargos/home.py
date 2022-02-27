@@ -18,7 +18,6 @@ bp = Blueprint("home", __name__)
 def load_logged_in_user():
     """Loads logged in user from session to g."""
     user_id = session.get("user_id")
-
     if user_id is None:
         g.user = None
     else:
@@ -39,6 +38,8 @@ def home():
             error = "User with such name does not exist."
         elif not check_password_hash(user["password"], password):
             error = "Incorrect password."
+        elif user["active"] == False:
+            error = "Your login was expired."
 
         if error is None:
             session.clear()
@@ -49,6 +50,7 @@ def home():
                 return redirect(url_for("admin"))
         else:
             flash(error)
+            return render_template("home/home.html")
     
     return render_template("home/home.html")
 

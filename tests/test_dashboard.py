@@ -31,6 +31,10 @@ def login(client, user, pwd, follow=True):
 def test_dashboard_response(client, app):
     """Test dashboard for authenticated and not authenticated users."""
     with app.app_context():
+        # Prepare test database (set all users active)
+        db = db_conn()[g.db_name]
+        db.users.update_many({}, {"$set": {"active": True}})
+
         # Not logged user
         response = client.get("/dashboard")
         assert g.user == None

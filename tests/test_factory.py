@@ -11,6 +11,9 @@ def test_create_app_factory_config():
     # Test "test" configuration
     assert not create_app().testing
     assert create_app({'TESTING': True}).testing
+    app = create_app({'TESTING': True})
+    with app.app_context():
+        assert app.config["DB_NAME"] == "test"
 
     # Test development configuration
     os.environ["FLASK_ENV"] = "development"
