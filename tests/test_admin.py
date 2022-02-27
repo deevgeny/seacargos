@@ -11,6 +11,7 @@ from seacargos.admin import users_stats
 from seacargos.admin import database_stats
 from seacargos.admin import etl_log_stats
 from seacargos.admin import active_user_names_from_db
+from seacargos.admin import blocked_user_names_from_db
 
 # Helper functions to run tests
 def login(client, user, pwd, follow=True):
@@ -136,8 +137,42 @@ def test_active_user_names_from_db(app):
     with app.app_context():
         db = db_conn()[g.db_name]
         active_users = active_user_names_from_db(db)
-        check = []
         cur = db.users.find({"active": True}, {"_id": 0, "name": 1})
+        count = db.users.count_documents({"active": True})
+        check = []
         for c in cur:
             check.append(c["name"])
         assert active_users == check
+        assert count == len(check)
+
+def test_blocked_user_names_from_db(app):
+    """Test blocked_user_names_from_db() function."""
+    with app.app_context():
+        # Prepare test database data
+        db = db_conn()[g.db_name]
+        db.users.update_many({}, {"$set": {"active": True}})
+
+        # Check current database condition
+        blocked_users = blocked_user_names_from_db(db)
+        cur = db.users.find({"active": False}, {"_id": 0, "name": 1})
+        count = db.users.count_documents({"active": False})
+        check = []
+        for c in cur:
+            check.append(c["name"])
+        assert blocked_users == check
+        assert count == len(check)
+
+        # Block all users in database
+        db.users.update_many({}, {"$set": {"active": False}})
+        blocked_users = blocked_user_names_from_db(db)
+        cur = db.users.find({"active": False}, {"_id": 0, "name": 1})
+        count = db.users.count_documents({"active": False})
+        check = []
+        for c in cur:
+            check.append(c["name"])
+        assert blocked_users == check
+        assert count == len(check)       
+
+        # Restore test database data
+        db.users.update_many({}, {"$set": {"active": True}})
+        del db
