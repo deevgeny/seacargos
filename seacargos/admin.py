@@ -125,9 +125,9 @@ def edit_user():
 
     return render_template("admin/edit_user.html", content=content)
 
-@bp.route("/admin/delete-user", methods=("GET", "POST"))
+@bp.route("/admin/block-user", methods=("GET", "POST"))
 @admin_login_required
-def delete_user():
+def block_user():
     """Edit new user form page."""
     db = db_conn()[g.db_name]
     content = {}
@@ -136,14 +136,18 @@ def delete_user():
     if request.method == "POST":
         form_data = dict(request.form)
         if form_data["user-name"] != "":
-            db.users.update(
+            cur = db.users.update_one(
                 {"name": form_data["user-name"]},
                 {"$set": {"active": False}}
                 )
+            if cur.raw_result["updatedExisting"]:
+                content["info"] = "User data successfully updated."
+            else:
+                content["error"] = "User data was not updated."
         else:
             content["error"] = "Please select user."
 
-    return render_template("admin/delete_user.html", content=content)
+    return render_template("admin/block_user.html", content=content)
 
 def size(bytes):
     """Accepts size in bytes as integer and returns size as string

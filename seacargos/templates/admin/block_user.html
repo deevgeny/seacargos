@@ -35,7 +35,7 @@
 {% block content %}
 <div id="admin-grid">
   <div id="center-box" class="info-box">
-    <div class="caption">Delete user</div>
+    <div class="caption">Block user</div>
     <form method="post" class="add-user">
       <label for="user-name">User name:</label>
       <select name="user-name" id="user-name">
@@ -44,7 +44,7 @@
           <option value="{{ name }}">{{ name }}</option>
           {% endfor %}
       </select>
-      <input type="submit" value="Delete">
+      <input type="submit" value="Block">
     </form>
     {% if content.error %}
     <div class="error">{{ content.error }}</div>
@@ -53,5 +53,4 @@
     {% endif %}
   </div>
 </div>
-<p>{{ content }}</p>
 {% endblock content %}
