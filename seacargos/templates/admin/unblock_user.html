@@ -6,7 +6,7 @@
 {# Add dashboard caption to title tag #}
 {% block title %}
   {% if g.user %}
-    | Admin panel - block user
+    | Admin panel - unblock user
   {% endif %}
 {% endblock title %}
 
@@ -35,7 +35,7 @@
 {% block content %}
 <div id="admin-grid">
   <div id="center-box" class="info-box">
-    <div class="caption">Block user</div>
+    <div class="caption">Unblock user</div>
     <form method="post" class="add-user">
       <label for="user-name">User name:</label>
       <select name="user-name" id="user-name">
@@ -44,7 +44,7 @@
           <option value="{{ name }}">{{ name }}</option>
           {% endfor %}
       </select>
-      <input type="submit" value="Block">
+      <input type="submit" value="Unblock">
     </form>
     {% if content.error %}
     <div class="error">{{ content.error }}</div>

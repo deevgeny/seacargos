@@ -128,7 +128,7 @@ def edit_user():
 @bp.route("/admin/block-user", methods=("GET", "POST"))
 @admin_login_required
 def block_user():
-    """Edit new user form page."""
+    """Block user form page."""
     db = db_conn()[g.db_name]
     content = {}
     content["user_names"] = active_user_names_from_db(db)
@@ -141,7 +141,7 @@ def block_user():
                 {"$set": {"active": False}}
                 )
             if cur.raw_result["updatedExisting"]:
-                content["info"] = "User data successfully updated."
+                content["info"] = "User successfully blocked."
             else:
                 content["error"] = "User data was not updated."
         else:
@@ -149,6 +149,29 @@ def block_user():
 
     return render_template("admin/block_user.html", content=content)
 
+@bp.route("/admin/unblock-user", methods=("GET", "POST"))
+@admin_login_required
+def unblock_user():
+    """Unblock user form page."""
+    db = db_conn()[g.db_name]
+    content = {}
+    content["user_names"] = blocked_user_names_from_db(db)
+    # POST method
+    if request.method == "POST":
+        form_data = dict(request.form)
+        if form_data["user-name"] != "":
+            cur = db.users.update_one(
+                {"name": form_data["user-name"]},
+                {"$set": {"active": True}}
+                )
+            if cur.raw_result["updatedExisting"]:
+                content["info"] = "User successfully unblocked."
+            else:
+                content["error"] = "User data was not updated."
+        else:
+            content["error"] = "Please select user."
+
+    return render_template("admin/unblock_user.html", content=content)
 # Helper functions
 # Admin
 def size(bytes):
@@ -203,12 +226,20 @@ def etl_log_stats():
     stats["size"] = size(os.path.getsize("etl.log"))
     return stats
 
-# Admin/edit-user and admin/delete-user
+# Admin/edit-user and admin/block-user
 def active_user_names_from_db(db):
-    """Returns all user names from database in list."""
+    """Returns list of active user names from database."""
     names = []
     cursor = db.users.find({"active": True}, {"_id": 0, "name": 1})
     for c in cursor:
         names.append(c["name"])
     return names
-    
+
+# Admin/unblock-user
+def blocked_user_names_from_db(db):
+    """Returns list of blocked user names from database."""
+    names = []
+    cursor = db.users.find({"active": False}, {"_id": 0, "name": 1})
+    for c in cursor:
+        names.append(c["name"])
+    return names   
