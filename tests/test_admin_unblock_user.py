@@ -17,8 +17,8 @@ def logout(client, follow=True):
     """Simple logout function."""
     return client.get("/logout", follow_redirects=follow)
 
-def test_admin_block_user_response(client, app):
-    """Test block_user() response."""
+def test_admin_unblock_user_response(client, app):
+    """Test unblock_user() response."""
     with app.app_context():
         # Prepare test database (set all users active)
         db = db_conn()[g.db_name]
@@ -53,36 +53,36 @@ def test_admin_block_user_response(client, app):
         logout(client)
         assert g.user == None
 
-def test_admin_block_user_form(client, app):
-    """Test block_user() form."""
+def test_admin_unblock_user_form(client, app):
+    """Test unblock_user() form."""
     with app.app_context():
         # Error "User data was not updated" not covered
         # Login and prepare database
         db = db_conn()[g.db_name]
-        db.users.update_many({}, {"$set": {"active": True}})
+        db.users.update_many({"name": "test"}, {"$set": {"active": False}})
         user = app.config["ADMIN_NAME"]
         pwd = app.config["ADMIN_PASSWORD"]
         login(client, user, pwd)
 
         # Block one user
         response = client.post(
-            "/admin/block-user",
+            "/admin/unblock-user",
             data={"user-name": "test"},
             follow_redirects=True
         )
         assert response.status_code == 200
-        assert b"User successfully blocked." in response.data
-        assert db.users.count_documents({"active": False}) == 1
+        assert b"User successfully unblocked." in response.data
+        assert db.users.count_documents({"active": False}) == 0
 
         # Block empty user
         response = client.post(
-            "/admin/block-user",
+            "/admin/unblock-user",
             data={"user-name": ""},
             follow_redirects=True
         )
         assert response.status_code == 200
         assert b"Please select user." in response.data
-        assert db.users.count_documents({"active": False}) == 1
+        assert db.users.count_documents({"active": False}) == 0
 
         # Restore database data to initial state
         db.users.update_many({}, {"$set": {"active": True}})

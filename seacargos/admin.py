@@ -172,6 +172,7 @@ def unblock_user():
             content["error"] = "Please select user."
 
     return render_template("admin/unblock_user.html", content=content)
+
 # Helper functions
 # Admin
 def size(bytes):

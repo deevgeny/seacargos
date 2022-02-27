@@ -13,6 +13,10 @@ def login(client, user, pwd, follow=True):
         "/", data={"username": user, "password": pwd},
         follow_redirects=follow)
 
+def logout(client, follow=True):
+    """Simple logout function."""
+    return client.get("/logout", follow_redirects=follow)
+
 def test_admin_edit_user_response(client, app):
     """Test edit_user() response."""
     with app.app_context():
@@ -30,17 +34,24 @@ def test_admin_edit_user_response(client, app):
         user = app.config["ADMIN_NAME"]
         pwd = app.config["ADMIN_PASSWORD"]
         response = login(client, user, pwd)
+        assert g.user != None
         assert response.status_code == 200
         response = client.get("/admin/edit-user")
         assert response.status_code == 200
+        logout(client)
+        assert g.user == None
 
         # Wrong user role
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
-        login(client, user, pwd)
+        response = login(client, user, pwd)
+        assert g.user != None
+        assert response.status_code == 200
         response = client.get("/admin/edit-user")
         assert response.status_code == 403
         assert b'You are not authorized to view this page.' in response.data
+        logout(client)
+        assert g.user == None
 
 def test_admin_edit_user_form(client, app):
     """Test edit_user() function form."""
@@ -51,6 +62,8 @@ def test_admin_edit_user_form(client, app):
         user = app.config["ADMIN_NAME"]
         pwd = app.config["ADMIN_PASSWORD"]
         login(client, user, pwd)
+
+        # Add one user to database before testing
         response = client.post(
             "/admin/add-user",
             data={"user-name": "test_1", "role": "user",

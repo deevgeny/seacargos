@@ -37,20 +37,21 @@ def test_admin_add_user_response(client, app):
         user = app.config["ADMIN_NAME"]
         pwd = app.config["ADMIN_PASSWORD"]
         response = login(client, user, pwd)
+        assert g.user != None
         assert response.status_code == 200
         response = client.get("/admin/add-user")
         assert response.status_code == 200
-        assert g.user != None
         logout(client)
         assert g.user == None
 
         # Wrong user role
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
-        login(client, user, pwd)
+        response = login(client, user, pwd)
+        assert g.user != None
+        assert response.status_code == 200
         response = client.get("/admin/add-user")
         assert response.status_code == 403
-        assert g.user != None
         assert b'You are not authorized to view this page.' in response.data
         logout(client)
         assert g.user == None       
