@@ -62,7 +62,7 @@ def test_home_simple_login(client, app):
         assert g.user == None
         db.users.delete_one({"name": "fake"})
 
-        # Locked user ("active": False)
+        # Locked user ("active": False, "role": "user")
         db.users.update_one({"name": "test"}, {"$set": {"active": False}})
         user = app.config["USER_NAME"]
         pwd = app.config["USER_PASSWORD"]
@@ -71,6 +71,16 @@ def test_home_simple_login(client, app):
         assert g.user == None
         assert b"Your login was expired." in response.data
         db.users.update_one({"name": "test"}, {"$set": {"active": True}})
+
+        # Locked user ("active": False, "role": "admin")
+        db.users.update_one({"name": "admin"}, {"$set": {"active": False}})
+        user = app.config["ADMIN_NAME"]
+        pwd = app.config["ADMIN_PASSWORD"]
+        response = login(client, user, pwd)
+        assert g.user == None
+        assert response.status_code == 200
+        assert b"Your login was expired." in response.data
+        db.users.update_one({"name": "admin"}, {"$set": {"active": True}})
 
 def test_home_redirects_on_login_and_logout(client, app):
     """Test redirects on login and logout."""

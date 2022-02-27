@@ -149,6 +149,8 @@ def block_user():
 
     return render_template("admin/block_user.html", content=content)
 
+# Helper functions
+# Admin
 def size(bytes):
     """Accepts size in bytes as integer and returns size as string
     with Kb, Mb or Gb abbr."""
@@ -161,13 +163,14 @@ def size(bytes):
     else:
         return str(round(bytes / 1024**3, 1)) + " Gb"
 
-# Helper functions
 # Admin
 def users_stats(db):
     """Prepare and return user stats."""
     stats = {}
     stats["admin"] = db.users.count_documents({"role": "admin"})
     stats["user"] = db.users.count_documents({"role": "user"})
+    stats["active"] = db.users.count_documents({"active": True})
+    stats["blocked"] = db.users.count_documents({"active": False})
     return stats
 
 # Admin

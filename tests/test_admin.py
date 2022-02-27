@@ -55,16 +55,6 @@ def test_admin_response(client, app):
         assert b'You are not authorized to view this page.' in response.data
         logout(client)
         
-        # Locked user ("active": False)
-        db.users.update_one({"name": "admin"}, {"$set": {"active": False}})
-        user = app.config["ADMIN_NAME"]
-        pwd = app.config["ADMIN_PASSWORD"]
-        response = login(client, user, pwd)
-        assert g.user == None
-        assert response.status_code == 200
-        assert b"Your login was expired." in response.data
-        db.users.update_one({"name": "admin"}, {"$set": {"active": True}})
-
 def test_size():
     """Test size() function."""
     assert size(1023) == "1023 bytes"
@@ -84,15 +74,17 @@ def test_users_stats(app):
         db.users.delete_one({"name": "test3"})
 
         # Test initial state
-        assert users_stats(db) == {"admin": 1, "user": 1}
+        assert users_stats(db) ==\
+            {"admin": 1, "user": 1, "active": 2, "blocked": 0}
         # Test with extra users
         test_data = [
-            {"name": "test1", "role": "user"},
-            {"name": "test2", "role": "user"},
-            {"name": "test3", "role": "admin"}
+            {"name": "test1", "role": "user", "active": True},
+            {"name": "test2", "role": "user", "active": True},
+            {"name": "test3", "role": "admin", "active": False}
         ]
         db.users.insert_many(test_data)
-        assert users_stats(db) == {"admin": 2, "user": 3}
+        assert users_stats(db) ==\
+            {"admin": 2, "user": 3, "active": 4, "blocked": 1}
 
         # Clean db after tests and check
         db.users.delete_one({"name": "test1"})
