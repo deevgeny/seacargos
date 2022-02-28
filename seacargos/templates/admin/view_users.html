@@ -1,0 +1,59 @@
+<!--Seacargos - sea cargos aggregator web application.-->
+<!--Copyright (C) 2022 Evgeny Deriglazov-->
+<!--https://github.com/evgeny81d/seacargos/blob/main/LICENSE-->
+{% extends 'base.html' %}
+
+{# Add dashboard caption to title tag #}
+{% block title %}
+  {% if g.user %}
+    | Admin panel - unblock user
+  {% endif %}
+{% endblock title %}
+
+{# Display user name and logout link on navigation menu #}
+{% block navigation_menu %}
+  {% if g.user %}
+    <a href="{{ url_for('admin') }}">Admin panel</a>
+  {% endif %}
+{% endblock navigation_menu %}
+
+{# Display user name and logout link on login menu #}
+{% block login_menu %}
+  {% if g.user %}
+    User: {{ g.user['name'] }} | <a href="{{ url_for('home.logout')}}">Logout</a>
+  {% endif %}
+{% endblock login_menu %}
+
+{# Display messages if exists #}
+{% block messages %}
+  {% for message in get_flashed_messages() %} 
+    <div class="error-message">{{ message }}</div>
+  {% endfor %}
+{% endblock messages %}
+
+{# Page content block #}
+{% block content %}
+  <div id="data-table">
+    {% if content.users %}
+      <div class="caption">Users</div>
+      <table>
+        <tr>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Status</th>
+        </tr>
+        {% for user in content.users %}
+        <tr>
+          <td>{{ user.name }}</td>
+          <td>{{ user.role }}</td>
+          {% if user.active %}
+            <td>Active</td>
+          {% else %}
+            <td>Blocked</td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </table>
+    {% endif %}
+  </div>
+{% endblock content %}

@@ -228,6 +228,13 @@ form.tracking {
     text-align: center;
 }
 
+#data-table table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 5px;
+        font-size: 12px;
+}
+
 /* Add-user form */
 form.add-user {
     display: grid;

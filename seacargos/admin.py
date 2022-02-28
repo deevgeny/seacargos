@@ -13,6 +13,8 @@ from flask import url_for
 
 
 from bson.objectid import ObjectId
+from bson.json_util import dumps
+import json
 import functools
 from werkzeug.exceptions import abort
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -173,6 +175,15 @@ def unblock_user():
 
     return render_template("admin/unblock_user.html", content=content)
 
+@bp.route("/admin/view-users")
+@admin_login_required
+def view_users():
+    """View users page."""
+    db = db_conn()[g.db_name]
+    content = {}
+    content["users"] = users_from_db(db)
+
+    return render_template("admin/view_users.html", content=content)
 # Helper functions
 # Admin
 def size(bytes):
@@ -244,3 +255,9 @@ def blocked_user_names_from_db(db):
     for c in cursor:
         names.append(c["name"])
     return names   
+
+# Admin/view-users
+def users_from_db(db):
+    """Returns users info from database."""
+    cursor = db.users.find({}, {"_id": 0, "password": 0})
+    return json.loads(dumps(cursor))

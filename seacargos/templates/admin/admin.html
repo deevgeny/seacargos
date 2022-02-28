@@ -61,7 +61,7 @@
     <a href="{{ url_for('admin.edit_user') }}">Edit</a> | 
     <a href="{{ url_for('admin.block_user') }}">Block</a> | 
     <a href="{{ url_for('admin.unblock_user') }}">Unblock</a> | 
-    <a href="#">View</a>
+    <a href="{{ url_for('admin.view_users') }}">View</a>
   </div>
   <div id="center-box-links" class="link-box">
     <a href="#">View database</a> 
@@ -70,8 +70,4 @@
     <a href="#">View logs</a> 
   </div>
 </div>
-
-  {% if g.user %}
-   <p>{{ content }}</p>
-  {% endif %}
 {% endblock %}
