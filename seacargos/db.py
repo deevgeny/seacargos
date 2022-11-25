@@ -1,66 +1,86 @@
-# Seacargos - sea cargos aggregator web application.
-# Copyright (C) 2022 Evgeny Deriglazov
-# https://github.com/evgeny81d/seacargos/blob/main/LICENSE
-
-from pymongo import MongoClient, ASCENDING
-from pymongo.errors import ConnectionFailure
-from bson.json_util import dumps
 import json
-from werkzeug.security import check_password_hash, generate_password_hash
+import logging
+from typing import Optional
 
-import click
-from flask import current_app, g
-from flask.cli import with_appcontext
+from bson.json_util import dumps
+from flask import Flask, current_app, g
+from pymongo import ASCENDING, MongoClient
+from pymongo.errors import ConnectionFailure
+from werkzeug.security import generate_password_hash
 
-def db_conn():
-    """Open MongoDB connection, add connection to g as g.conn and
-    database name to g as g.db. Return g.conn."""
+logger = logging.getLogger("DATABASE")
+
+
+def db_conn() -> Optional[MongoClient]:
+    """Open MongoDB connection.
+
+    Update Flask g object:
+    - g.conn = MongoClient.
+    - g.db_name = database name to use.
+    """
     if 'conn' not in g:
-        g.conn = MongoClient(current_app.config['DB_FRONTEND_URI'])
-        g.db_name = current_app.config["DB_NAME"]
+        try:
+            g.conn = MongoClient(current_app.config['DB_FRONTEND_URI'])
+            g.db_name = current_app.config["DB_NAME"]
+        except ConnectionFailure:
+            logger.error("Database connection failure.")
+            return
+        except BaseException as e:
+            logger.error(f"Unexpected error: {e.args}")
+            return
     return g.conn
 
-def close_db_conn(exception):
-    """Pop MongoDB connection object from g and close."""
+
+def close_db_conn(exception: BaseException) -> None:
+    """Pop MongoDB connection object from Flask g object and close."""
     conn = g.pop('conn', None)
 
     if conn is not None:
         g.pop('db', None)
         conn.close()
 
-# Register close_conn() function with application
-def init_app(app):
+
+def init_app(app: Flask) -> None:
     """Add close_db_conn() to teardown appcontext."""
     app.teardown_appcontext(close_db_conn)
 
-def setup_db(app):
-    """Add 2 first users to database."""
+
+def setup_db(app: Flask) -> None:
+    """Setup database.
+
+    Add 2 first users to database with credentials setup in .env file.
+    """
     # Connect to database
-    conn = MongoClient(app.config['DB_FRONTEND_URI'])
-    db = conn[app.config["DB_NAME"]]
+    try:
+        conn = MongoClient(app.config['DB_FRONTEND_URI'])
+        db = conn[app.config["DB_NAME"]]
+    except ConnectionFailure:
+        logger.error("Database connection failure")
+    except BaseException as e:
+        logger.error(f"Unexpected error: {e.args}")
 
     # Add admin user to database
     cur = db.users.find_one({"name": app.config["ADMIN_NAME"]})
-    if cur is None:
+    if not cur:
         pwd = generate_password_hash(app.config['ADMIN_PASSWORD'])
         db.users.insert_one(
             {'name': app.config['ADMIN_NAME'],
-            'password': pwd,
-            'role': 'admin',
-            'active': True}
+             'password': pwd,
+             'role': 'admin',
+             'active': True}
         )
 
     # Add simple user to database
     cur = db.users.find_one({"name": app.config["USER_NAME"]})
-    if cur is None:
+    if not cur:
         pwd = generate_password_hash(app.config['USER_PASSWORD'])
         db.users.insert_one(
             {'name': app.config['USER_NAME'],
-            'password': pwd,
-            'role': 'user',
-            'active': True}
+             'password': pwd,
+             'role': 'user',
+             'active': True}
         )
-    
+
     # Add username unique index to database users collection
     cur = db.users.list_indexes()
     idxs = json.loads(dumps(cur))
@@ -69,6 +89,6 @@ def setup_db(app):
             [("name", ASCENDING)],
             unique=True,
             name="name_index"
-            )
+        )
 
     conn.close()

@@ -1,27 +1,26 @@
-# Seacargos - sea cargos aggregator web application.
-# Copyright (C) 2022 Evgeny Deriglazov
-# https://github.com/evgeny81d/seacargos/blob/main/LICENSE
-
-from flask import Blueprint
-from flask import flash
-from flask import g
-from flask import session
-from flask import redirect
-from flask import render_template
-from flask import request
-from flask import url_for
-
-
-from bson.objectid import ObjectId
-from bson.json_util import dumps
-import json
 import functools
-from werkzeug.exceptions import abort
-from werkzeug.security import check_password_hash, generate_password_hash
-from seacargos.db import db_conn
+import json
 import os
 
+from bson.json_util import dumps
+from bson.objectid import ObjectId
+from flask import (
+    Blueprint,
+    g,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+from pymongo.database import Database
+from werkzeug.exceptions import abort
+from werkzeug.security import generate_password_hash
+
+from db import db_conn
+
 bp = Blueprint('admin', __name__)
+
 
 @bp.before_app_request
 def load_logged_in_user():
@@ -33,15 +32,17 @@ def load_logged_in_user():
         db = db_conn()[g.db_name]
         g.user = db.users.find_one({"_id": ObjectId(user_id)})
 
+
 def admin_login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
-            return redirect(url_for('home.home'))
-        elif g.user['role'] != 'admin':
-            abort(403, 'You are not authorized to view this page.')
+            return redirect(url_for("home.home"))
+        elif g.user['role'] != "admin":
+            abort(403, "You are not authorized to view this page.")
         return view(**kwargs)
     return wrapped_view
+
 
 @bp.route("/admin")
 @admin_login_required
@@ -52,8 +53,8 @@ def admin():
     content["users"] = users_stats(db)
     content["db"] = database_stats(db)
     content["etl_log"] = etl_log_stats()
-    #flash("test message")
-    return render_template('admin/admin.html', content=content)
+    return render_template("admin/admin.html", content=content)
+
 
 @bp.route("/admin/add-user", methods=("GET", "POST"))
 @admin_login_required
@@ -74,16 +75,16 @@ def add_user():
         else:
             pwd_hash = generate_password_hash(form_data["pwd"])
             cur = db.users.insert_one(
-                {"name": form_data['user-name'], "role": form_data["role"],
-                "password": pwd_hash, "active": True}
+                {"name": form_data["user-name"], "role": form_data["role"],
+                 "password": pwd_hash, "active": True}
             )
             if cur.acknowledged and cur.inserted_id:
                 content["info"] = "New user successfully added to database."
             else:
                 content["error"] = "Database write error."
-                # Add log
 
     return render_template("admin/add_user.html", content=content)
+
 
 @bp.route("/admin/edit-user", methods=("GET", "POST"))
 @admin_login_required
@@ -97,22 +98,22 @@ def edit_user():
         query = {}
         change = {}
         form_data = dict(request.form)
-        #content["form"] = form_data # Debug
 
         # Check user name
         if form_data["user-name"] != "":
             query["name"] = form_data["user-name"]
-        
+
         # Check role
         if form_data["role"] != "":
             change["role"] = form_data["role"]
 
         # Check passwords
-        if form_data["pwd"] != "" and form_data["pwd"] == form_data["pwd-repeat"]:
+        if (form_data["pwd"] != ""
+                and form_data["pwd"] == form_data["pwd-repeat"]):
             change["password"] = generate_password_hash(form_data["pwd"])
         elif form_data["pwd"] != form_data["pwd-repeat"]:
             content["error"] = "Passwords does not match."
-        
+
         # Check request and change data, and make update or send error message
         if len(query) == 1 and len(change) > 0:
             cur = db.users.update_one(query, {"$set": change})
@@ -122,10 +123,11 @@ def edit_user():
                 content["error"] = "User data was not updated."
         elif len(query) == 0:
             content["error"] = "Please select user."
-        elif len(change) == 0 and content.get("error", None) == None:
+        elif len(change) == 0 and not content.get("error", None):
             content["error"] = "Edit fields have been not filled."
 
     return render_template("admin/edit_user.html", content=content)
+
 
 @bp.route("/admin/block-user", methods=("GET", "POST"))
 @admin_login_required
@@ -141,7 +143,7 @@ def block_user():
             cur = db.users.update_one(
                 {"name": form_data["user-name"]},
                 {"$set": {"active": False}}
-                )
+            )
             if cur.raw_result["updatedExisting"]:
                 content["info"] = "User successfully blocked."
             else:
@@ -150,6 +152,7 @@ def block_user():
             content["error"] = "Please select user."
 
     return render_template("admin/block_user.html", content=content)
+
 
 @bp.route("/admin/unblock-user", methods=("GET", "POST"))
 @admin_login_required
@@ -165,7 +168,7 @@ def unblock_user():
             cur = db.users.update_one(
                 {"name": form_data["user-name"]},
                 {"$set": {"active": True}}
-                )
+            )
             if cur.raw_result["updatedExisting"]:
                 content["info"] = "User successfully unblocked."
             else:
@@ -174,6 +177,7 @@ def unblock_user():
             content["error"] = "Please select user."
 
     return render_template("admin/unblock_user.html", content=content)
+
 
 @bp.route("/admin/view-users")
 @admin_login_required
@@ -184,22 +188,22 @@ def view_users():
     content["users"] = users_from_db(db)
 
     return render_template("admin/view_users.html", content=content)
-# Helper functions
-# Admin
-def size(bytes):
+
+
+def size(bytes: int) -> str:
     """Accepts size in bytes as integer and returns size as string
     with Kb, Mb or Gb abbr."""
     if bytes < 1024:
         return str(bytes) + " bytes"
-    elif bytes < 1024**2:
+    elif bytes < 1024 ** 2:
         return str(round(bytes / 1024, 1)) + " Kb"
-    elif bytes < 1024**3:
-        return str(round(bytes / 1024**2, 1)) + " Mb"
+    elif bytes < 1024 ** 3:
+        return str(round(bytes / 1024 ** 2, 1)) + " Mb"
     else:
-        return str(round(bytes / 1024**3, 1)) + " Gb"
+        return str(round(bytes / 1024 ** 3, 1)) + " Gb"
 
-# Admin
-def users_stats(db):
+
+def users_stats(db: Database) -> dict:
     """Prepare and return user stats."""
     stats = {}
     stats["admin"] = db.users.count_documents({"role": "admin"})
@@ -208,8 +212,8 @@ def users_stats(db):
     stats["blocked"] = db.users.count_documents({"active": False})
     return stats
 
-# Admin
-def database_stats(db):
+
+def database_stats(db: Database) -> dict:
     """Prepare and return database stats."""
     stats = {"collections": []}
     db_stats = db.command("dbstats")
@@ -224,22 +228,21 @@ def database_stats(db):
         stats["collections"].append(data)
     return stats
 
-# Admin
-def etl_log_stats():
+
+def etl_log_stats() -> dict:
     """Prepare and return etl log stats."""
     stats = {}
-    if os.path.exists("etl.log"):
-        with open("etl.log", "r") as f:
+    if os.path.exists("logs/one.log"):
+        with open("logs/one.log", "r") as f:
             logs = len(f.readlines())
+        stats["size"] = size(os.path.getsize("logs/one.log"))
     else:
-        with open("etl.log", "a") as f:
-            logs = 0
+        stats["size"] = logs = 0
     stats["logs"] = logs
-    stats["size"] = size(os.path.getsize("etl.log"))
     return stats
 
-# Admin/edit-user and admin/block-user
-def active_user_names_from_db(db):
+
+def active_user_names_from_db(db: Database) -> list:
     """Returns list of active user names from database."""
     names = []
     cursor = db.users.find({"active": True}, {"_id": 0, "name": 1})
@@ -247,17 +250,17 @@ def active_user_names_from_db(db):
         names.append(c["name"])
     return names
 
-# Admin/unblock-user
-def blocked_user_names_from_db(db):
+
+def blocked_user_names_from_db(db: Database) -> list:
     """Returns list of blocked user names from database."""
     names = []
     cursor = db.users.find({"active": False}, {"_id": 0, "name": 1})
     for c in cursor:
         names.append(c["name"])
-    return names   
+    return names
 
-# Admin/view-users
-def users_from_db(db):
+
+def users_from_db(db: Database) -> dict:
     """Returns users info from database."""
     cursor = db.users.find({}, {"_id": 0, "password": 0})
     return json.loads(dumps(cursor))

@@ -1,22 +1,27 @@
-# Seacargos - sea cargos aggregator web application.
-# Copyright (C) 2022 Evgeny Deriglazov
-# https://github.com/evgeny81d/seacargos/blob/main/LICENSE
+import logging
 
-import functools
-
-from flask import (
-    Blueprint, flash, g, redirect, render_template, session, request, url_for
-)
-from werkzeug.exceptions import abort
-from werkzeug.security import check_password_hash, generate_password_hash
-from seacargos.db import db_conn
 from bson.objectid import ObjectId
+from flask import (
+    Blueprint,
+    flash,
+    g,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+from werkzeug.security import check_password_hash
+
+from db import db_conn
 
 bp = Blueprint("home", __name__)
+logger = logging.getLogger("WEB APP")
+
 
 @bp.before_app_request
 def load_logged_in_user():
-    """Loads logged in user from session to g."""
+    """Loads logged in user from session to g object."""
     user_id = session.get("user_id")
     if user_id is None:
         g.user = None
@@ -24,9 +29,15 @@ def load_logged_in_user():
         db = db_conn()[g.db_name]
         g.user = db.users.find_one({"_id": ObjectId(user_id)})
 
+
 @bp.route("/", methods=("GET", "POST"))
 def home():
-    """Home view function (website entry point)."""
+    """Home page view function (website entry point).
+
+    Functionality:
+    - GET - display home page with login form for unauthenticated user.
+    - POST - login user to web site.
+    """
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
@@ -34,14 +45,14 @@ def home():
         error = None
         user = db.users.find_one({"name": username})
 
-        if user is None:
+        if not user:
             error = "User with such name does not exist."
         elif not check_password_hash(user["password"], password):
             error = "Incorrect password."
-        elif user["active"] == False:
+        elif not user["active"]:
             error = "Your login was expired."
 
-        if error is None:
+        if not error:
             session.clear()
             session["user_id"] = user["_id"].__str__()
             if user["role"] == "user":
@@ -50,12 +61,14 @@ def home():
                 return redirect(url_for("admin"))
         else:
             flash(error)
+            logger.error(f"User unseccessful login: {user}")
             return render_template("home/home.html")
-    
+
     return render_template("home/home.html")
+
 
 @bp.route("/logout")
 def logout():
-    """Logout function."""
+    """User logout function."""
     session.clear()
     return redirect(url_for("home"))

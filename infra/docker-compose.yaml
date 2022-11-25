@@ -1,0 +1,42 @@
+version: '3.1'
+
+services:
+
+  mongo:
+    image: mongo:5.0.14-focal
+    restart: always
+    env_file:
+      - ./.env
+    volumes:
+      - database:/data/db/
+    command: mongod --auth
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    env_file:
+      - ./.env
+  
+  web:
+    build: ../seacargos
+    restart: always
+    ports:
+     - "5000:5000"
+    depends_on:
+      - mongo
+    env_file:
+      - ./.env
+  
+  nginx:
+    image: nginx:1.21.3-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - web
+
+volumes:
+  database:

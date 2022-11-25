@@ -138,3 +138,6 @@ dmypy.json
 
 # Visual studio
 .vscode
+
+# Seacargos
+/tests
