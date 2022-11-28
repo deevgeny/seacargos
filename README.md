@@ -1,8 +1,9 @@
 # Seacargos
 Sea cargos aggregator web application.
-Current app version is being developed to aggregate ONE (Ocean Network Express) container shippings.
+Current app version is being developed to aggregate ONE (Ocean Network Express) 
+container shippings.
 
-## Who can use it
+## Technology stack
 Anyone who have a need to track sea shipments.
 
 ## How it works
