@@ -11,6 +11,7 @@ from flask import (
     session,
     url_for,
 )
+from forms import LoginForm
 from werkzeug.security import check_password_hash
 
 from db import db_conn
@@ -38,7 +39,8 @@ def home():
     - GET - display home page with login form for unauthenticated user.
     - POST - login user to web site.
     """
-    if request.method == "POST":
+    form = LoginForm()
+    if form.validate_on_submit():
         username = request.form["username"]
         password = request.form["password"]
         db = db_conn()[g.db_name]
@@ -64,7 +66,7 @@ def home():
             logger.error(f"User unseccessful login: {user}")
             return render_template("home/home.html")
 
-    return render_template("home/home.html")
+    return render_template("home/home.html", form=form)
 
 
 @bp.route("/logout")

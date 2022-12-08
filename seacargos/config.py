@@ -31,15 +31,13 @@ def create_app(test_config=None):
     if env == "development" or env == "production":
         db.setup_db(app)
 
-    # Register home page blueprint
+    # Register blueprints
     app.register_blueprint(home.bp)
     app.add_url_rule("/", endpoint="home")
 
-    # Register admin blueprint
     app.register_blueprint(admin.bp)
     app.add_url_rule("/admin", endpoint="admin")
 
-    # Register dashboard blueprint
     app.register_blueprint(dashboard.bp)
     app.add_url_rule("/dashboard", endpoint="dashboard")
 

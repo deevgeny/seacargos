@@ -301,3 +301,14 @@ form.login-form {
         margin: 5px 0;
         max-width: 100px;
     }
+    form.login-form > span {
+        grid-column: fields;
+        grid-row: auto;
+        place-self: center right;
+        /*align-self: center;
+        justify-self: left;*/
+        margin: 5px 0;
+        max-width: 100px;
+        color: red;
+        font-size: 10px;
+    }
