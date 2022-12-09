@@ -4,22 +4,16 @@ import os
 
 from bson.json_util import dumps
 from bson.objectid import ObjectId
-from flask import (
-    Blueprint,
-    g,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for,
-)
+from flask import Blueprint, g, redirect, render_template, session, url_for
 from pymongo.database import Database
 from werkzeug.exceptions import abort
 from werkzeug.security import generate_password_hash
 
 from db import db_conn
+from forms import AddUserForm, BlockUserForm, EditUserForm, UnblockUserForm
 
 bp = Blueprint('admin', __name__)
+ROLES = [("admin", "admin"), ("user", "user")]
 
 
 @bp.before_app_request
@@ -44,7 +38,7 @@ def admin_login_required(view):
     return wrapped_view
 
 
-@bp.route("/admin")
+@bp.route("/admin/")
 @admin_login_required
 def admin():
     """Admin panel page."""
@@ -56,26 +50,25 @@ def admin():
     return render_template("admin/admin.html", content=content)
 
 
-@bp.route("/admin/add-user", methods=("GET", "POST"))
+@bp.route("/admin/add-user/", methods=("GET", "POST"))
 @admin_login_required
 def add_user():
     """Add new user form page."""
     db = db_conn()[g.db_name]
-    content = {"roles": ["admin", "user"]}
+    form = AddUserForm()
+    form.role.choices = ROLES
+    content = {"form": form}
     # POST method
-    if request.method == "POST":
-        form_data = dict(request.form)
-        if db.users.find_one({"name": form_data["user-name"]}):
-            content["error"] =\
-                f"User name {form_data['user-name']} already exists."
-        elif form_data["pwd"] != form_data["pwd-repeat"]:
+    if form.validate_on_submit():
+        if db.users.find_one({"name": form.username.data}):
+            content["error"] = (f"User name {form.username.data} "
+                                "already exists.")
+        elif form.password.data != form.password_repeat.data:
             content["error"] = "Passwords does not match."
-        elif form_data["role"] == "":
-            content["error"] = "Please select role."
         else:
-            pwd_hash = generate_password_hash(form_data["pwd"])
+            pwd_hash = generate_password_hash(form.password.data)
             cur = db.users.insert_one(
-                {"name": form_data["user-name"], "role": form_data["role"],
+                {"name": form.username.data, "role": form.role.data,
                  "password": pwd_hash, "active": True}
             )
             if cur.acknowledged and cur.inserted_id:
@@ -86,100 +79,95 @@ def add_user():
     return render_template("admin/add_user.html", content=content)
 
 
-@bp.route("/admin/edit-user", methods=("GET", "POST"))
+@bp.route("/admin/edit-user/", methods=("GET", "POST"))
 @admin_login_required
 def edit_user():
     """Edit new user form page."""
     db = db_conn()[g.db_name]
-    content = {"roles": ["admin", "user"]}
-    content["user_names"] = active_user_names_from_db(db)
+    form = EditUserForm()
+    form.username.choices = (
+        [("", "")] + [(i, i) for i in active_user_names_from_db(db)]
+    )
+    form.role.choices = [("", "")] + ROLES
+    content = {"form": form}
     # POST method
-    if request.method == "POST":
-        query = {}
+    if form.validate_on_submit():
+        query = {"name": form.username.data}
         change = {}
-        form_data = dict(request.form)
-
-        # Check user name
-        if form_data["user-name"] != "":
-            query["name"] = form_data["user-name"]
 
         # Check role
-        if form_data["role"] != "":
-            change["role"] = form_data["role"]
+        if form.role.data:
+            change["role"] = form.role.data
 
         # Check passwords
-        if (form_data["pwd"] != ""
-                and form_data["pwd"] == form_data["pwd-repeat"]):
-            change["password"] = generate_password_hash(form_data["pwd"])
-        elif form_data["pwd"] != form_data["pwd-repeat"]:
+        if (form.password.data
+                and form.password.data == form.password_repeat.data):
+            change["password"] = generate_password_hash(form.password.data)
+        elif form.password.data != form.password_repeat.data:
             content["error"] = "Passwords does not match."
 
         # Check request and change data, and make update or send error message
-        if len(query) == 1 and len(change) > 0:
+        if len(change) > 0:
             cur = db.users.update_one(query, {"$set": change})
             if cur.raw_result["updatedExisting"]:
                 content["info"] = "User data successfully updated."
             else:
                 content["error"] = "User data was not updated."
-        elif len(query) == 0:
-            content["error"] = "Please select user."
         elif len(change) == 0 and not content.get("error", None):
             content["error"] = "Edit fields have been not filled."
 
     return render_template("admin/edit_user.html", content=content)
 
 
-@bp.route("/admin/block-user", methods=("GET", "POST"))
+@bp.route("/admin/block-user/", methods=("GET", "POST"))
 @admin_login_required
 def block_user():
     """Block user form page."""
     db = db_conn()[g.db_name]
-    content = {}
-    content["user_names"] = active_user_names_from_db(db)
+    form = BlockUserForm()
+    form.username.choices = (
+        [("", "")] + [(i, i) for i in active_user_names_from_db(db)]
+    )
+    content = {"form": form}
     # POST method
-    if request.method == "POST":
-        form_data = dict(request.form)
-        if form_data["user-name"] != "":
-            cur = db.users.update_one(
-                {"name": form_data["user-name"]},
-                {"$set": {"active": False}}
-            )
-            if cur.raw_result["updatedExisting"]:
-                content["info"] = "User successfully blocked."
-            else:
-                content["error"] = "User data was not updated."
+    if form.validate_on_submit():
+        cur = db.users.update_one(
+            {"name": form.username.data},
+            {"$set": {"active": False}}
+        )
+        if cur.raw_result["updatedExisting"]:
+            content["info"] = "User successfully blocked."
         else:
-            content["error"] = "Please select user."
+            content["error"] = "User data was not updated."
 
     return render_template("admin/block_user.html", content=content)
 
 
-@bp.route("/admin/unblock-user", methods=("GET", "POST"))
+@bp.route("/admin/unblock-user/", methods=("GET", "POST"))
 @admin_login_required
 def unblock_user():
     """Unblock user form page."""
     db = db_conn()[g.db_name]
-    content = {}
-    content["user_names"] = blocked_user_names_from_db(db)
+    form = UnblockUserForm()
+    form.username.choices = (
+        [("", "")] + [(i, i) for i in blocked_user_names_from_db(db)]
+    )
+    content = {"form": form}
     # POST method
-    if request.method == "POST":
-        form_data = dict(request.form)
-        if form_data["user-name"] != "":
-            cur = db.users.update_one(
-                {"name": form_data["user-name"]},
-                {"$set": {"active": True}}
-            )
-            if cur.raw_result["updatedExisting"]:
-                content["info"] = "User successfully unblocked."
-            else:
-                content["error"] = "User data was not updated."
+    if form.validate_on_submit():
+        cur = db.users.update_one(
+            {"name": form.username.data},
+            {"$set": {"active": True}}
+        )
+        if cur.raw_result["updatedExisting"]:
+            content["info"] = "User successfully unblocked."
         else:
-            content["error"] = "Please select user."
+            content["error"] = "User data was not updated."
 
     return render_template("admin/unblock_user.html", content=content)
 
 
-@bp.route("/admin/view-users")
+@bp.route("/admin/view-users/")
 @admin_login_required
 def view_users():
     """View users page."""
@@ -244,20 +232,14 @@ def etl_log_stats() -> dict:
 
 def active_user_names_from_db(db: Database) -> list:
     """Returns list of active user names from database."""
-    names = []
     cursor = db.users.find({"active": True}, {"_id": 0, "name": 1})
-    for c in cursor:
-        names.append(c["name"])
-    return names
+    return [c["name"] for c in cursor]
 
 
 def blocked_user_names_from_db(db: Database) -> list:
     """Returns list of blocked user names from database."""
-    names = []
     cursor = db.users.find({"active": False}, {"_id": 0, "name": 1})
-    for c in cursor:
-        names.append(c["name"])
-    return names
+    return [c["name"] for c in cursor]
 
 
 def users_from_db(db: Database) -> dict:

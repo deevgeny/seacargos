@@ -1,6 +1,3 @@
-<!--Seacargos - sea cargos aggregator web application.-->
-<!--Copyright (C) 2022 Evgeny Deriglazov-->
-<!--https://github.com/evgeny81d/seacargos/blob/main/LICENSE-->
 {% extends 'base.html' %}
 
 {# Add dashboard caption to title tag #}
@@ -36,15 +33,31 @@
 <div id="dashboard-grid">
   <div id="tracking-form" class="tracking-form-container">
     <div class="caption">Add new shipment</div>
-    <form method="post" class="tracking">
-      <label for="booking">Booking or container No.:</label>
-      <input name="booking" id="booking" required>
-      <label for="refId">Ref Id:</label>
-      <input name="refId" id="refId">
-      <label for="requestedETA">Requested ETA:</label>
-      <input class="date" type="date" name="requestedETA" id="requestedETA">
-      <input type="submit" value="Add">
-    </form>
+      <form method="post" class="tracking" novalidate>
+        {{ content.form.csrf_token }}
+        {% if content.form.csrf_token.errors %}
+          <div class="error-message">You have submitted an invalid CSRF token</div>
+        {% endif %}
+        {{ content.form.booking.label }}
+        {{ content.form.booking() }}
+        {% for error in content.form.booking.errors %}
+          <span>{{ error }}</span>
+        {% endfor %}
+
+        {{ content.form.ref_id.label }}
+        {{ content.form.ref_id() }}
+        {% for error in content.form.ref_id.errors %}
+          <span>{{ error }}</span>
+        {% endfor %}
+
+        {{ content.form.requested_eta.label }}
+        {{ content.form.requested_eta() }}
+        {% for error in content.form.requested_eta.errors %}
+          <span>{{ error }}</span>
+        {% endfor %}
+    
+        {{ content.form.submit() }}
+      </form>
   </div>
   <div id="tracking-summary" class="tracking-summary-container">
     <div class="caption">Tracking summary</div>

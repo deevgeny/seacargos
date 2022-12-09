@@ -7,13 +7,13 @@ from flask import (
     g,
     redirect,
     render_template,
-    request,
     session,
     url_for,
 )
 from werkzeug.security import check_password_hash
 
 from db import db_conn
+from forms import LoginForm
 
 bp = Blueprint("home", __name__)
 logger = logging.getLogger("WEB APP")
@@ -38,9 +38,10 @@ def home():
     - GET - display home page with login form for unauthenticated user.
     - POST - login user to web site.
     """
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
         db = db_conn()[g.db_name]
         error = None
         user = db.users.find_one({"name": username})
@@ -64,7 +65,7 @@ def home():
             logger.error(f"User unseccessful login: {user}")
             return render_template("home/home.html")
 
-    return render_template("home/home.html")
+    return render_template("home/home.html", form=form)
 
 
 @bp.route("/logout")

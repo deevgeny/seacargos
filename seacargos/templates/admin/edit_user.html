@@ -36,26 +36,35 @@
 <div id="admin-grid">
   <div id="center-box" class="info-box">
     <div class="caption">Edit user</div>
-    <form method="post" class="add-user">
-      <label for="user-name">User name:</label>
-      <select name="user-name" id="user-name">
-          <option value="" selected></option>
-          {% for name in content.user_names %}
-          <option value="{{ name }}">{{ name }}</option>
-          {% endfor %}
-      </select>
-      <label for="role">Role:</label>
-      <select name="role" id="role">
-          <option value="" selected></option>
-          {% for role in content.roles %}
-          <option value="{{ role }}">{{ role }}</option>
-          {% endfor %}
-      </select>  
-      <label for="pwd">Password:</label>
-      <input type="password" name="pwd" id="pwd">
-      <label for="pwd-repeat">Repeat password:</label>
-      <input type="password" name="pwd-repeat" id="pwd-repeat">
-      <input type="submit" value="Submit">
+    <form method="post" class="add-user" novalidate>
+        {{ content.form.csrf_token }}
+        {% if content.form.csrf_token.errors %}
+          <div class="error-message">You have submitted an invalid CSRF token</div>
+        {% endif %}
+        {{ content.form.username.label }}
+        {{ content.form.username() }}
+        {% for error in content.form.username.errors %}
+          <span>{{ error }}</span>
+        {% endfor %}
+
+        {{ content.form.role.label }}
+        {{ content.form.role() }}
+        {% for error in content.form.role.errors %}
+          <span>{{ error }}</span>
+        {% endfor %}
+
+        {{ content.form.password.label }}
+        {{ content.form.password() }}
+        {% for error in content.form.password.errors %}
+          <span>{{ error }}</span>
+        {% endfor %}
+    
+        {{ content.form.password_repeat.label }}
+        {{ content.form.password_repeat() }}
+        {% for error in content.form.password_repeat.errors %}
+          <span>{{ error }}</span>
+        {% endfor %}
+        {{ content.form.submit() }}
     </form>
     {% if content.error %}
     <div class="error">{{ content.error }}</div>

@@ -10,12 +10,22 @@
 {# Page content block #}
 {% block content %}
   {% if not g.user %}
-    <form method="post" class="login-form">
-      <label for="username">Username:</label>
-      <input name="username" id="username" required>
-      <label for="password">Password:</label>
-      <input type="password" name="password" id="password" required>
-      <input type="submit" value="Log In">
+    <form action="" class="login-form" method="post" novalidate>
+      {{ form.csrf_token }}
+      {% if form.csrf_token.errors %}
+        <div class="error-message">You have submitted an invalid CSRF token</div>
+      {% endif %}
+      {{ form.username.label }}
+      {{ form.username() }}
+      {% for error in form.username.errors %}
+        <span>{{ error }}</span>
+      {% endfor %}
+      {{ form.password.label }}
+      {{ form.password() }}
+      {% for error in form.password.errors %}
+        <span>{{ error }}</span>
+      {% endfor %}
+      {{ form.submit() }}
     </form>
   {% else %}
     <p>You are logged in under {{ g.user["name"] }} account.</p>
