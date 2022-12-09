@@ -4,21 +4,13 @@ import os
 
 from bson.json_util import dumps
 from bson.objectid import ObjectId
-from flask import (
-    Blueprint,
-    g,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for,
-)
+from flask import Blueprint, g, redirect, render_template, session, url_for
 from pymongo.database import Database
 from werkzeug.exceptions import abort
 from werkzeug.security import generate_password_hash
 
 from db import db_conn
-from forms import AddUserForm, BlockUserForm, EditUserForm
+from forms import AddUserForm, BlockUserForm, EditUserForm, UnblockUserForm
 
 bp = Blueprint('admin', __name__)
 ROLES = [("admin", "admin"), ("user", "user")]
@@ -156,22 +148,21 @@ def block_user():
 def unblock_user():
     """Unblock user form page."""
     db = db_conn()[g.db_name]
-    content = {}
-    content["user_names"] = blocked_user_names_from_db(db)
+    form = UnblockUserForm()
+    form.username.choices = (
+        [("", "")] + [(i, i) for i in blocked_user_names_from_db(db)]
+    )
+    content = {"form": form}
     # POST method
-    if request.method == "POST":
-        form_data = dict(request.form)
-        if form_data["user-name"] != "":
-            cur = db.users.update_one(
-                {"name": form_data["user-name"]},
-                {"$set": {"active": True}}
-            )
-            if cur.raw_result["updatedExisting"]:
-                content["info"] = "User successfully unblocked."
-            else:
-                content["error"] = "User data was not updated."
+    if form.validate_on_submit():
+        cur = db.users.update_one(
+            {"name": form.username.data},
+            {"$set": {"active": True}}
+        )
+        if cur.raw_result["updatedExisting"]:
+            content["info"] = "User successfully unblocked."
         else:
-            content["error"] = "Please select user."
+            content["error"] = "User data was not updated."
 
     return render_template("admin/unblock_user.html", content=content)
 
@@ -241,20 +232,14 @@ def etl_log_stats() -> dict:
 
 def active_user_names_from_db(db: Database) -> list:
     """Returns list of active user names from database."""
-    names = []
     cursor = db.users.find({"active": True}, {"_id": 0, "name": 1})
-    for c in cursor:
-        names.append(c["name"])
-    return names
+    return [c["name"] for c in cursor]
 
 
 def blocked_user_names_from_db(db: Database) -> list:
     """Returns list of blocked user names from database."""
-    names = []
     cursor = db.users.find({"active": False}, {"_id": 0, "name": 1})
-    for c in cursor:
-        names.append(c["name"])
-    return names
+    return [c["name"] for c in cursor]
 
 
 def users_from_db(db: Database) -> dict:

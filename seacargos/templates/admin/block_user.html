@@ -43,21 +43,8 @@
         {% for error in content.form.username.errors %}
           <span>{{ error }}</span>
         {% endfor %}
-
         {{ content.form.submit() }}
       </form>
-
-
-    <!-- <form method="post" class="add-user">
-      <label for="user-name">User name:</label>
-      <select name="user-name" id="user-name">
-          <option value="" selected></option>
-          {% for name in content.user_names %}
-          <option value="{{ name }}">{{ name }}</option>
-          {% endfor %}
-      </select>
-      <input type="submit" value="Block">
-    </form> -->
     {% if content.error %}
     <div class="error">{{ content.error }}</div>
     {% elif content.info %}

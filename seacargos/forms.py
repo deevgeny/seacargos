@@ -42,3 +42,8 @@ class BlockUserForm(FlaskForm):
     """Block user form."""
     username = SelectField("Username", validators=[validators.DataRequired()])
     submit = SubmitField("Block")
+
+
+class UnblockUserForm(BlockUserForm):
+    """Unblock user form."""
+    submit = SubmitField("Unblock")
