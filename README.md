@@ -6,6 +6,7 @@ container shippings.
 ## Technology stack
 - Python 3.10
 - Flask 2.2
+- WTForms 3.0
 - Pymongo 4.3
 - Gunicorn 20.1
 - Nginx 1.21.3
