@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import (
+    DateField,
     PasswordField,
     SelectField,
     StringField,
@@ -47,3 +48,13 @@ class BlockUserForm(FlaskForm):
 class UnblockUserForm(BlockUserForm):
     """Unblock user form."""
     submit = SubmitField("Unblock")
+
+
+class TrackingForm(FlaskForm):
+    """Add new tracking record form."""
+    booking = StringField("Booking or container No.",
+                          validators=[validators.DataRequired()])
+    ref_id = StringField("Ref Id", validators=[validators.optional()])
+    requested_eta = DateField("Requested ETA",
+                              validators=[validators.optional()])
+    submit = SubmitField("Add")

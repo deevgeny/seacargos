@@ -10,7 +10,6 @@ from flask import (
     g,
     redirect,
     render_template,
-    request,
     session,
     url_for,
 )
@@ -22,6 +21,7 @@ from werkzeug.exceptions import abort
 from db import db_conn
 from etl.oneline import etl_one
 from etl.oneline_update import record_schedule_update, user_schedule_update
+from forms import TrackingForm
 
 bp = Blueprint("dashboard", __name__)
 logger = logging.getLogger("WEB APP")
@@ -49,18 +49,19 @@ def user_login_required(view):
     return wrapped_view
 
 
-@bp.route("/dashboard", methods=("GET", "POST"))
+@bp.route("/dashboard/", methods=("GET", "POST"))
 @user_login_required
 def dashboard():
     """Home dashboard view function."""
     conn = db_conn()
     db = conn[g.db_name]
-    content = {}
+    form = TrackingForm()
+    content = {"form": form}
 
     # POST request
-    if request.method == "POST":
+    if form.validate_on_submit():
         # Validate booking number
-        booking = request.form["booking"]
+        booking = form.booking.data
         query = validate_booking_number(booking)
 
         # Prevent records duplication in database
@@ -70,12 +71,12 @@ def dashboard():
             query["requestedETA"] = "-"
 
             # Check refId input and update value
-            if len(request.form["refId"]) > 0:
-                query["refId"] = request.form["refId"]
+            if form.ref_id.data:
+                query["refId"] = form.ref_id.data
 
             # Check requested ETA input and update value
-            if request.form["requestedETA"].replace("/", "").isnumeric():
-                query["requestedETA"] = request.form["requestedETA"]
+            if form.requested_eta.raw_data:
+                query["requestedETA"] = form.requested_eta.raw_data[0]
 
             # Run ETL and update content
             content.update(etl_one(query, conn, db))
@@ -89,7 +90,7 @@ def dashboard():
     return render_template("dashboard/dashboard.html", content=content)
 
 
-@bp.route("/dashboard/<bkg_number>")
+@bp.route("/dashboard/<bkg_number>/")
 @user_login_required
 def details(bkg_number):
     """View to display shipment details."""
@@ -107,7 +108,7 @@ def details(bkg_number):
     return render_template("/dashboard/details.html", content=content)
 
 
-@bp.route("/dashboard/update")
+@bp.route("/dashboard/update/")
 @user_login_required
 def update():
     """Update user shipments schedules for all records."""
@@ -119,7 +120,7 @@ def update():
     return redirect(url_for("dashboard"))
 
 
-@bp.route("/dashboard/update/<bkg_number>")
+@bp.route("/dashboard/update/<bkg_number>/")
 @user_login_required
 def update_record(bkg_number):
     """Update user shipment schedule for one record."""
@@ -281,9 +282,21 @@ def prepare_record_details(record: Optional[dict]) -> Optional[dict]:
         row["event"] = i[0]["event"]
         row["placeName"] = i[0]["placeName"]
         row["yardName"] = i[0]["yardName"]
-        row["plannedDate"] = dt.strftime(i[1]["eventDate"], format_string)
-        row["actualDate"] = dt.strftime(i[0]["eventDate"], format_string)
-        row["delta"] = (i[0]["eventDate"] - i[1]["eventDate"]).days
+        # Transform if exists
+        if i[1]["eventDate"]:
+            row["plannedDate"] = dt.strftime(i[1]["eventDate"], format_string)
+        else:
+            row["plannedDate"] = ""
+        # Transform if exists
+        if i[0]["eventDate"]:
+            row["actualDate"] = dt.strftime(i[0]["eventDate"], format_string)
+        else:
+            row["actualDate"] = ""
+        # Calculate if exists
+        if i[0]["eventDate"] and i[1]["eventDate"]:
+            row["delta"] = (i[0]["eventDate"] - i[1]["eventDate"]).days
+        else:
+            row["delta"] = ""
         row["status"] = i[0]["status"]
         details.append(row)
     return details
