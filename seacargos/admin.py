@@ -13,14 +13,15 @@ from flask import (
     session,
     url_for,
 )
-from forms import AddUserForm
 from pymongo.database import Database
 from werkzeug.exceptions import abort
 from werkzeug.security import generate_password_hash
 
 from db import db_conn
+from forms import AddUserForm, EditUserForm
 
 bp = Blueprint('admin', __name__)
+ROLES = [("admin", "admin"), ("user", "user")]
 
 
 @bp.before_app_request
@@ -63,7 +64,7 @@ def add_user():
     """Add new user form page."""
     db = db_conn()[g.db_name]
     form = AddUserForm()
-    form.role.choices = [("admin", "admin"), ("user", "user")]
+    form.role.choices = ROLES
     content = {"form": form}
     # POST method
     if form.validate_on_submit():
@@ -91,38 +92,35 @@ def add_user():
 def edit_user():
     """Edit new user form page."""
     db = db_conn()[g.db_name]
-    content = {"roles": ["admin", "user"]}
-    content["user_names"] = active_user_names_from_db(db)
+    form = EditUserForm()
+    form.username.choices = [("", "")] + [
+        (i, i) for i in active_user_names_from_db(db)
+    ]
+    form.role.choices = [("", "")] + ROLES
+    content = {"form": form}
     # POST method
-    if request.method == "POST":
-        query = {}
+    if form.validate_on_submit():
+        query = {"name": form.username.data}
         change = {}
-        form_data = dict(request.form)
-
-        # Check user name
-        if form_data["user-name"] != "":
-            query["name"] = form_data["user-name"]
 
         # Check role
-        if form_data["role"] != "":
-            change["role"] = form_data["role"]
+        if form.role.data:
+            change["role"] = form.role.data
 
         # Check passwords
-        if (form_data["pwd"] != ""
-                and form_data["pwd"] == form_data["pwd-repeat"]):
-            change["password"] = generate_password_hash(form_data["pwd"])
-        elif form_data["pwd"] != form_data["pwd-repeat"]:
+        if (form.password.data
+                and form.password.data == form.password_repeat.data):
+            change["password"] = generate_password_hash(form.password.data)
+        elif form.password.data != form.password_repeat.data:
             content["error"] = "Passwords does not match."
 
         # Check request and change data, and make update or send error message
-        if len(query) == 1 and len(change) > 0:
+        if len(change) > 0:
             cur = db.users.update_one(query, {"$set": change})
             if cur.raw_result["updatedExisting"]:
                 content["info"] = "User data successfully updated."
             else:
                 content["error"] = "User data was not updated."
-        elif len(query) == 0:
-            content["error"] = "Please select user."
         elif len(change) == 0 and not content.get("error", None):
             content["error"] = "Edit fields have been not filled."
 
