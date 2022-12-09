@@ -11,7 +11,10 @@
 {% block content %}
   {% if not g.user %}
     <form action="" class="login-form" method="post" novalidate>
-      {{ form.hidden_tag() }}
+      {{ form.csrf_token }}
+      {% if form.csrf_token.errors %}
+        <div class="error-message">You have submitted an invalid CSRF token</div>
+      {% endif %}
       {{ form.username.label }}
       {{ form.username() }}
       {% for error in form.username.errors %}

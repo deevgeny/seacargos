@@ -36,9 +36,9 @@ def create_app(test_config=None):
     app.add_url_rule("/", endpoint="home")
 
     app.register_blueprint(admin.bp)
-    app.add_url_rule("/admin", endpoint="admin")
+    app.add_url_rule("/admin/", endpoint="admin")
 
     app.register_blueprint(dashboard.bp)
-    app.add_url_rule("/dashboard", endpoint="dashboard")
+    app.add_url_rule("/dashboard/", endpoint="dashboard")
 
     return app

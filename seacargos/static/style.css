@@ -275,6 +275,17 @@ form.add-user {
         margin: 5px 10px 5px 0;
         font-size: 12px;
     }
+    form.add-user > span {
+        grid-column: fields;
+        grid-row: auto;
+        place-self: center right;
+        /*align-self: center;
+        justify-self: left;*/
+        margin: 5px 0;
+        max-width: 100px;
+        color: red;
+        font-size: 10px;
+    }
 
 /* Home page login form */
 form.login-form {

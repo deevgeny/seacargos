@@ -13,6 +13,7 @@ from flask import (
     session,
     url_for,
 )
+from forms import AddUserForm
 from pymongo.database import Database
 from werkzeug.exceptions import abort
 from werkzeug.security import generate_password_hash
@@ -44,7 +45,7 @@ def admin_login_required(view):
     return wrapped_view
 
 
-@bp.route("/admin")
+@bp.route("/admin/")
 @admin_login_required
 def admin():
     """Admin panel page."""
@@ -56,26 +57,25 @@ def admin():
     return render_template("admin/admin.html", content=content)
 
 
-@bp.route("/admin/add-user", methods=("GET", "POST"))
+@bp.route("/admin/add-user/", methods=("GET", "POST"))
 @admin_login_required
 def add_user():
     """Add new user form page."""
     db = db_conn()[g.db_name]
-    content = {"roles": ["admin", "user"]}
+    form = AddUserForm()
+    form.role.choices = [("admin", "admin"), ("user", "user")]
+    content = {"form": form}
     # POST method
-    if request.method == "POST":
-        form_data = dict(request.form)
-        if db.users.find_one({"name": form_data["user-name"]}):
-            content["error"] =\
-                f"User name {form_data['user-name']} already exists."
-        elif form_data["pwd"] != form_data["pwd-repeat"]:
+    if form.validate_on_submit():
+        if db.users.find_one({"name": form.username.data}):
+            content["error"] = (f"User name {form.username.data} "
+                                "already exists.")
+        elif form.password.data != form.password_repeat.data:
             content["error"] = "Passwords does not match."
-        elif form_data["role"] == "":
-            content["error"] = "Please select role."
         else:
-            pwd_hash = generate_password_hash(form_data["pwd"])
+            pwd_hash = generate_password_hash(form.password.data)
             cur = db.users.insert_one(
-                {"name": form_data["user-name"], "role": form_data["role"],
+                {"name": form.username.data, "role": form.role.data,
                  "password": pwd_hash, "active": True}
             )
             if cur.acknowledged and cur.inserted_id:
@@ -86,7 +86,7 @@ def add_user():
     return render_template("admin/add_user.html", content=content)
 
 
-@bp.route("/admin/edit-user", methods=("GET", "POST"))
+@bp.route("/admin/edit-user/", methods=("GET", "POST"))
 @admin_login_required
 def edit_user():
     """Edit new user form page."""
@@ -129,7 +129,7 @@ def edit_user():
     return render_template("admin/edit_user.html", content=content)
 
 
-@bp.route("/admin/block-user", methods=("GET", "POST"))
+@bp.route("/admin/block-user/", methods=("GET", "POST"))
 @admin_login_required
 def block_user():
     """Block user form page."""
@@ -154,7 +154,7 @@ def block_user():
     return render_template("admin/block_user.html", content=content)
 
 
-@bp.route("/admin/unblock-user", methods=("GET", "POST"))
+@bp.route("/admin/unblock-user/", methods=("GET", "POST"))
 @admin_login_required
 def unblock_user():
     """Unblock user form page."""
@@ -179,7 +179,7 @@ def unblock_user():
     return render_template("admin/unblock_user.html", content=content)
 
 
-@bp.route("/admin/view-users")
+@bp.route("/admin/view-users/")
 @admin_login_required
 def view_users():
     """View users page."""

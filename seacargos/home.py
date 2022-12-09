@@ -7,7 +7,6 @@ from flask import (
     g,
     redirect,
     render_template,
-    request,
     session,
     url_for,
 )
@@ -41,8 +40,8 @@ def home():
     """
     form = LoginForm()
     if form.validate_on_submit():
-        username = request.form["username"]
-        password = request.form["password"]
+        username = form.username.data
+        password = form.password.data
         db = db_conn()[g.db_name]
         error = None
         user = db.users.find_one({"name": username})
