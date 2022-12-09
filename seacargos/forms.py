@@ -36,3 +36,9 @@ class EditUserForm(FlaskForm):
     password_repeat = PasswordField("Repeat password",
                                     validators=[validators.optional()])
     submit = SubmitField("Submit")
+
+
+class BlockUserForm(FlaskForm):
+    """Block user form."""
+    username = SelectField("Username", validators=[validators.DataRequired()])
+    submit = SubmitField("Block")

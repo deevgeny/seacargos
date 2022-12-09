@@ -18,7 +18,7 @@ from werkzeug.exceptions import abort
 from werkzeug.security import generate_password_hash
 
 from db import db_conn
-from forms import AddUserForm, EditUserForm
+from forms import AddUserForm, BlockUserForm, EditUserForm
 
 bp = Blueprint('admin', __name__)
 ROLES = [("admin", "admin"), ("user", "user")]
@@ -93,9 +93,9 @@ def edit_user():
     """Edit new user form page."""
     db = db_conn()[g.db_name]
     form = EditUserForm()
-    form.username.choices = [("", "")] + [
-        (i, i) for i in active_user_names_from_db(db)
-    ]
+    form.username.choices = (
+        [("", "")] + [(i, i) for i in active_user_names_from_db(db)]
+    )
     form.role.choices = [("", "")] + ROLES
     content = {"form": form}
     # POST method
@@ -132,22 +132,21 @@ def edit_user():
 def block_user():
     """Block user form page."""
     db = db_conn()[g.db_name]
-    content = {}
-    content["user_names"] = active_user_names_from_db(db)
+    form = BlockUserForm()
+    form.username.choices = (
+        [("", "")] + [(i, i) for i in active_user_names_from_db(db)]
+    )
+    content = {"form": form}
     # POST method
-    if request.method == "POST":
-        form_data = dict(request.form)
-        if form_data["user-name"] != "":
-            cur = db.users.update_one(
-                {"name": form_data["user-name"]},
-                {"$set": {"active": False}}
-            )
-            if cur.raw_result["updatedExisting"]:
-                content["info"] = "User successfully blocked."
-            else:
-                content["error"] = "User data was not updated."
+    if form.validate_on_submit():
+        cur = db.users.update_one(
+            {"name": form.username.data},
+            {"$set": {"active": False}}
+        )
+        if cur.raw_result["updatedExisting"]:
+            content["info"] = "User successfully blocked."
         else:
-            content["error"] = "Please select user."
+            content["error"] = "User data was not updated."
 
     return render_template("admin/block_user.html", content=content)
 
