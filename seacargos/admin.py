@@ -63,8 +63,6 @@ def add_user():
         if db.users.find_one({"name": form.username.data}):
             content["error"] = (f"User name {form.username.data} "
                                 "already exists.")
-        elif form.password.data != form.password_repeat.data:
-            content["error"] = "Passwords does not match."
         else:
             pwd_hash = generate_password_hash(form.password.data)
             cur = db.users.insert_one(
@@ -100,11 +98,8 @@ def edit_user():
             change["role"] = form.role.data
 
         # Check passwords
-        if (form.password.data
-                and form.password.data == form.password_repeat.data):
+        if form.password.data:
             change["password"] = generate_password_hash(form.password.data)
-        elif form.password.data != form.password_repeat.data:
-            content["error"] = "Passwords does not match."
 
         # Check request and change data, and make update or send error message
         if len(change) > 0:

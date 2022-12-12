@@ -23,8 +23,11 @@ class AddUserForm(FlaskForm):
     role = SelectField("Role", validators=[validators.DataRequired()])
     password = PasswordField("Password",
                              validators=[validators.DataRequired()])
-    password_repeat = PasswordField("Repeat password",
-                                    validators=[validators.DataRequired()])
+    password_repeat = PasswordField(
+        "Repeat password",
+        validators=[validators.EqualTo(fieldname="password",
+                                       message="Passwords do not match.")]
+    )
     submit = SubmitField("Add")
 
 
@@ -34,8 +37,13 @@ class EditUserForm(FlaskForm):
     role = SelectField("Role", validators=[validators.optional()])
     password = PasswordField("Password",
                              validators=[validators.optional()])
-    password_repeat = PasswordField("Repeat password",
-                                    validators=[validators.optional()])
+    password_repeat = PasswordField(
+        "Repeat password",
+        validators=[
+            validators.EqualTo(fieldname="password",
+                               message="Passwords do not match."),
+        ]
+    )
     submit = SubmitField("Submit")
 
 
